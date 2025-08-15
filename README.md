@@ -14,11 +14,12 @@ This repository contains:
 
 ## Getting Started
 
-1. Creating a new PRAS case file (*python*)
+1. Download and install Git Large File Share as described here: https://www.git-lfs.com
+2. Creating a new PRAS case file (*python*)
     - Install python environment including the packages `os` and `h5py`
     - In the file `1_create_nem_pras_file.py`:
         - Adjust the parameters to desired case (including study year, network model, ISP scenario)
         - Run the file. The output will be saved as a `*.pras` file in the hdf5-format.
-2. Run PRAS  (*julia*)
+3. Run PRAS  (*julia*)
     - Install the package `PRAS`
     - Run the file `2_run_pras_study.jl`
