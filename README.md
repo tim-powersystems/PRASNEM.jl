@@ -22,7 +22,7 @@ This repository contains:
 3. Run PRASNEM (*julia*)
     - Develop the package PRASNEM by running
         ```Julia
-            pkg> dev ./PRASNEM
+            using Pkg; Pkg.develop("./PRASNEM")
         ```
     - Run the package
         ```Julia
