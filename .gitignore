@@ -1,4 +1,6 @@
 *.jl.*.cov
 *.jl.cov
 *.jl.mem
+_personal scripts/**
 Manifest.toml
+.vscode/
