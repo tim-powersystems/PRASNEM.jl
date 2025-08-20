@@ -1,0 +1,18 @@
+function run_pras_study(file_name::String, sample_number::Int=1000)
+    
+    println("Using $(Threads.nthreads()) threads")
+    println("Loading system... $(file_name)")
+
+    sys = SystemModel(file_name)
+
+    #%% 
+    println("Evaluating system...")
+    sf,  = assess(sys, SequentialMonteCarlo(samples=sample_number), Shortfall())
+
+    #%%
+    println("Calculating metrics...")
+    println(LOLE(sf))
+    println(EUE(sf))
+    println(NEUE(sf))
+
+end

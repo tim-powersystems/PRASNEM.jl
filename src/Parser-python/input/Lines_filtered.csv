@@ -1,0 +1,17 @@
+name,category,region_from,region_to,forwardcapacity,backwardcapacity,failureprobability,repairprobability
+CQ->NQ,interregion_AC,2,1,1400,1400,0,1
+CQ->GG,interregion_AC,2,3,1050,1100,0,1
+SQ->CQ,interregion_AC,4,2,1100,2100,0,1
+QNI North,interregion_AC,5,4,745,1170,0.000131034,0.068965517
+Terranora,interregion_AC,5,4,50,200,0,1
+QNI South,interregion_AC,6,5,910,1025,0.000131034,0.068965517
+CNSW->SNW North,interregion_AC,6,7,4730,4730,0,1
+CNSW->SNW South,interregion_AC,6,7,2720,2720,0,1
+VNI North,interregion_AC,8,6,2950,2590,0,1
+VNI South,interregion_AC,9,8,1000,400,0,1
+Heywood,interregion_AC,9,12,650,650,0.000115385,0.128205128
+SESA->CSA,interregion_AC,12,11,650,650,0,1
+Murraylink,interregion_HVDC,9,11,220,200,5.64516E-05,0.080645161
+Basslink,interregion_HVDC,10,9,594,478,0.000251987,0.004675082
+Project EnergyConnect,interregion_AC,8,11,800,800,0,1
+Waratah Network Augmentation,interregion_AC,6,7,0,0,0,1
