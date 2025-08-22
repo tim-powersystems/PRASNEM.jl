@@ -13,7 +13,6 @@ function parse_to_pras_format()
     # ---- CHANGE INPUTS HERE ----
 
     scenarios = [2]  # 1 is progressive change, 2 is step change, 3 is green hydrogen exports
-    gen_ids = [92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123] #can remove timestep generators if desired
     regions_selected = collect(1:12) # can select a subset or set to empty for copperplate []
     
     # Select generator technologies to exclude (to do studies with selected generators off)
@@ -21,8 +20,9 @@ function parse_to_pras_format()
     alias_excluded = [] # can select a subset or set to empty for all []
 
     # Only dates in data are FY25-26, FY30-31, FY35-36, FY40-41 and FY50-51
-    start_date = "2030-07-01 00:00:00" #change as needed
-    end_date = "2031-06-30 23:00:00" #change as needed
+    start_date = "2025-01-07 00:00:00" #change as needed
+    end_date = "2025-01-13 23:00:00" #change as needed
+    folder_name_timeseries = "schedule-1w" # change as needed
 
     # Find timestep count
     start_dt = DateTime(start_date, dateformat"yyyy-mm-dd HH:MM:SS")
@@ -56,16 +56,16 @@ function parse_to_pras_format()
     current_working_directory = pwd()
 
     # Define the path to the input and output folder (CAN CHANGE AS NEEDED)
-    input_folder = joinpath(current_working_directory, "src", "sample_data", "input")
+    input_folder = joinpath(current_working_directory, "src", "sample_data", "nem12")
     output_folder = joinpath(current_working_directory, "src", "sample_data", "output", "testing")
 
     # Define input and output file names (CAN CHANGE AS NEEDED, JUST ENSURE THEY ARE THE SAME FORMAT)
     load_input_filename =  "Demand_load_sched.csv"
     load_output_filename = "filtered_timestep_load.csv"
-    generator_input_filename = "_orig_Generator.csv"
+    generator_input_filename = "Generator.csv"
     timestep_generator_input_filename = "Generator_pmax_sched.csv"
     timestep_generator_output_filename = "filtered_timestep_generator.csv"
-    storages_input_filename = "_orig_ESS.csv"
+    storages_input_filename = "ESS.csv"
     generatorstorage_inflows_input_filename = "Hydro_inflow.csv"
     generatorstorage_inflows_output_filename = "calculated_hydro_inflow.csv"
     #interfaces_input_filename = "Interfaces.csv"
@@ -73,10 +73,10 @@ function parse_to_pras_format()
     hdf5_output_filename = string(Date(start_dt), "_to_", Date(end_dt), "_", prod(string.(regions_selected)), "_regions_nem.pras")
 
     # Define input and output full file paths
-    load_input_file = joinpath(input_folder, load_input_filename)
+    load_input_file = joinpath(input_folder, folder_name_timeseries, load_input_filename)
     load_output_file = joinpath(output_folder, "temp", load_output_filename)
     generator_input_file = joinpath(input_folder, generator_input_filename)
-    timestep_generator_input_file = joinpath(input_folder, timestep_generator_input_filename)
+    timestep_generator_input_file = joinpath(input_folder, folder_name_timeseries, timestep_generator_input_filename)
     timestep_generator_output_file = joinpath(output_folder, "temp", timestep_generator_output_filename)
     storages_input_file = joinpath(input_folder, storages_input_filename)
     generatorstorage_inflows_input_file = joinpath(input_folder, generatorstorage_inflows_input_filename)
@@ -89,13 +89,20 @@ function parse_to_pras_format()
 
 
     # ---- CREATE PRAS FILE ----
+    println("Creating PRAS file from input data...")
+    println("Regions: ", if isempty(regions_selected) "All" else regions_selected end )
+    println("Timeseries: ", start_dt,": ", units.T(units.L), " :", end_dt)
+    println("Excluded tech/fuel: ", if isempty(gentech_excluded) "None" else gentech_excluded end)
+    println("Excluded aliases: ", if isempty(alias_excluded) "None" else alias_excluded end)
 
     regions = createRegions(load_input_file, units, regions_selected, scenarios, start_dt, end_dt)
     gens, gen_region_attribution = createGenerators(generator_input_file, timestep_generator_input_file, units, regions_selected, start_dt, end_dt; 
         scenarios=scenarios, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded)
+    stors, stors_region_attribution = createStorages(storages_input_file, units, regions_selected, start_dt, end_dt; 
+        scenarios=scenarios, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded)
+    
     # TODO: Develop these functions
-    # stors, stors_region_attribution = createStorages(storages_input_file, units, regions_selected, start_dt, end_dt; 
-    #     scenarios=scenarios, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded)
+    # 
     # genstors, genstors_region_attribution = createGeneratorStorages(generatorstorage_inflows_input_file, units, regions_selected, start_dt, end_dt; 
     #     scenarios=scenarios, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded)
 
