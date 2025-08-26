@@ -1,4 +1,4 @@
-function createGenerators(generator_input_file, timestep_generator_input_file, units, regions_selected, start_dt, end_dt; 
+function createGenerators(generator_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenarios=[2], gentech_excluded=[], alias_excluded=[], investment_filter=[0], active_filter=[1])
 
     # Read in all the metadata of the generators
@@ -42,32 +42,73 @@ function createGenerators(generator_input_file, timestep_generator_input_file, u
     gen_info.repairrate .= 1 ./ gen_info.MTTR
     gen_info.failurerate .= gen_info.FOR ./ (gen_info.MTTR .* (1 .- gen_info.FOR))
 
-    # Get the timeseries only for those generators for the relevant time
-    data = CSV.read(timestep_generator_input_file, DataFrame)
-    filtered_timestep_generator = filterSortTimeseriesData(data, units, start_dt, end_dt, 2, "gen_id", gen_info.id[:])
-
-    # TODO: Get the time-varying n
+    # Get the timeseries data of the n generators
+    timeseries_file_n = joinpath(timeseries_folder, "Generator_n_sched.csv")
+    n = CSV.read(timeseries_file_n, DataFrame)
+    n.date = DateTime.(n.date, dateformat"yyyy-mm-dd HH:MM:SS")
+    timeseries_n = PISP.filterSortTimeseriesData(n, units, start_dt, end_dt, 2, "gen_id", gen_info.id[:])
     
+    # Update the maximum n in the gen_info dataframe
+    timeseries_n_gen_ids = parse.(Int, names(select(timeseries_n, Not(:date))))
+    timeseries_n_max = maximum.(eachcol(select(timeseries_n, Not(:date))))
+    for i in eachindex(timeseries_n_gen_ids)
+        gen_info[gen_info.id .== timeseries_n_gen_ids[i], :n].= timeseries_n_max[i]
+    end
+
+    # Get the timeseries data of the generator capacities (for renewables)
+    timeseries_file_pmax = joinpath(timeseries_folder, "Generator_pmax_sched.csv")
+    pmax = CSV.read(timeseries_file_pmax, DataFrame)
+    pmax.date = DateTime.(pmax.date, dateformat"yyyy-mm-dd HH:MM:SS")
+    timeseries_pmax = PISP.filterSortTimeseriesData(pmax, units, start_dt, end_dt, 2, "gen_id", gen_info.id[:])
+    timeseries_pmax_gen_ids = parse.(Int, names(select(timeseries_pmax, Not(:date))))
+
     # Convert the timeseries data into the PRAS format
-    gens_cap = zeros(Int, length(gen_info.id), units.N)
-    gens_failurerate = zeros(Float64, length(gen_info.id), units.N)
-    gens_repairrate = zeros(Float64, length(gen_info.id), units.N)
-    for i in 1:nrow(gen_info)
-        row = gen_info[i, :]
-        time_data = filtered_timestep_generator[filtered_timestep_generator.gen_id .== row.id, :]
-        if isempty(time_data)
-            # If there is no time-varying data available: Use the registered capacity of all the units
-            gens_cap[i, :] = fill(round(Int,row[:capacity] .* row[:n]), units.N)
-        else
-            if length(time_data.date) != units.N
-                println("Mismatch in timestep count for generator ID $(row.id)")
-            end
-            gens_cap[i, :] = round.(Int, time_data.value)
+    Ngens = sum(gen_info.n)
+    gens_names = Vector{String}(undef, Ngens)
+    gens_categories = Vector{String}(undef, Ngens)
+    gens_cap = zeros(Int, Ngens, units.N)
+    gens_failurerate = zeros(Float64, Ngens, units.N)
+    gens_repairrate = zeros(Float64, Ngens, units.N)
+    # Iterate through each row
+    gen_index_counter = 1
+    for row in eachrow(gen_info)
+        # If there are no units of this generator in the relevant time: continue
+        if row.n == 0
+            continue
         end
 
-        gens_failurerate[i, :] = fill(row.failurerate, units.N)
-        gens_repairrate[i, :] = fill(row.repairrate, units.N)
+        # Do for each unit of the generator
+        for i in 1:row.n
+            gens_names[gen_index_counter] = "$(row.id)_" * string(i)
+            gens_categories[gen_index_counter] = row.tech
 
+            if (row.id in timeseries_pmax_gen_ids)
+                # If there is time-varying data available
+                gens_cap[gen_index_counter, :] = round.(Int, timeseries_pmax[!, "$(row.id)"])
+            else
+                gens_cap[gen_index_counter, :] = fill(round(Int, row[:capacity]), units.N)
+            end
+            # Could add a time-varying failure and repair rate here if needed
+            gens_failurerate[gen_index_counter, :] = fill(row.failurerate, units.N)
+            gens_repairrate[gen_index_counter, :] = fill(row.repairrate, units.N)
+            gen_index_counter += 1
+        end
+
+        if (row.id in timeseries_n_gen_ids)
+            # Check if the number of units changes over time
+            if (minimum(timeseries_n[!, "$(row.id)"]) < row.n)
+                println("Note: The number of units for generator id $(row.id) changes over time. Adjusting the availability accordingly.")
+                # Now iterate through the different unique levels of n
+                unique_n = unique(timeseries_n[!, "$(row.id)"])
+                sort!(unique_n)
+                for un in unique_n
+                    # Find all the timesteps when the number of units is equal to un
+                    timeseries_n_indices = findall(timeseries_n[!, "$(row.id)"] .== un)
+                    # Set all the generators that are not on at these time-steps to zero
+                    gens_cap[gen_index_counter - row.n + un:gen_index_counter - 1, timeseries_n_indices] .*= 0
+                end
+            end
+        end
     end
 
     # Calculate the gen_region_attribution
@@ -80,8 +121,8 @@ function createGenerators(generator_input_file, timestep_generator_input_file, u
     end
 
     return Generators{units.N, units.L, units.T, units.P}(
-        Vector(gen_info[!, :alias]), # Names
-        Vector(gen_info[!, :tech]), # Categories
+        gens_names, # Names
+        gens_categories, # Categories
         gens_cap, # capacity (MW) for each generator and timestep
         gens_failurerate, # failure rate (λ) for each generator and timestep
         gens_repairrate # repair rate (μ) for each generator and timestep

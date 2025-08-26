@@ -75,8 +75,7 @@ function parse_to_pras_format()
     load_input_file = joinpath(input_folder, folder_name_timeseries, load_input_filename)
     load_output_file = joinpath(output_folder, "temp", load_output_filename)
     generator_input_file = joinpath(input_folder, generator_input_filename)
-    timestep_generator_input_file = joinpath(input_folder, folder_name_timeseries, timestep_generator_input_filename)
-    timestep_generator_output_file = joinpath(output_folder, "temp", timestep_generator_output_filename)
+    timeseries_folder = joinpath(input_folder, folder_name_timeseries)
     storages_input_file = joinpath(input_folder, storages_input_filename)
     generatorstorage_inflows_input_file = joinpath(input_folder, generatorstorage_inflows_input_filename)
     generatorstorage_inflows_output_file = joinpath(output_folder, "temp", generatorstorage_inflows_output_filename)
@@ -94,7 +93,7 @@ function parse_to_pras_format()
     println("Excluded aliases: ", if isempty(alias_excluded) "None" else alias_excluded end)
 
     regions = createRegions(load_input_file, units, regions_selected, scenarios, start_dt, end_dt)
-    gens, gen_region_attribution = createGenerators(generator_input_file, timestep_generator_input_file, units, regions_selected, start_dt, end_dt; 
+    gens, gen_region_attribution = createGenerators(generator_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenarios=scenarios, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded)
     stors, stors_region_attribution = createStorages(storages_input_file, generator_input_file, units, regions_selected; 
         gentech_excluded=gentech_excluded, alias_excluded=alias_excluded)
