@@ -27,6 +27,6 @@ This repository contains:
     - Run the package
         ```Julia
             using PRASNEM
-            file_name = "src/Parser/output/2030-07-01_to_2031-06-30_12_regions_nem.pras"
+            file_name = "src/sample_data/output/2030-07-01_to_2031-06-30_12_regions_nem.pras"
             PRASNEM.run_pras_study(file_name, 100)
         ```

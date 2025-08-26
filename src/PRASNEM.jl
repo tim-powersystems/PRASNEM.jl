@@ -1,26 +1,19 @@
 module PRASNEM
 
 using PRAS
+using CSV
+using Dates
+using DataFrames
 import Base.Threads
 
-# Write your package code here.
-    function run_pras_study(file_name::String, sample_number::Int=1000)
-        
-        println("Using $(Threads.nthreads()) threads")
-        println("Loading system... $(file_name)")
+using Pkg; Pkg.develop(url="https://github.com/ARPST-UniMelb/PISP.jl"); using PISP
 
-        sys = SystemModel(file_name)
+# Include the parser files
+include("./parser/core.jl")
 
-        #%% 
-        println("Evaluating system...")
-        sf,  = assess(sys, SequentialMonteCarlo(samples=sample_number), Shortfall())
 
-        #%%
-        println("Calculating LOLE and EUE...")
-        println(LOLE(sf))
-        println(EUE(sf))
-        println(NEUE(sf))
+# Include the functions for running PRAS
+include("./studies/core.jl")
 
-    end
 
 end
