@@ -30,6 +30,16 @@ jobs:
         arch:
           - x64
     steps:
+      - name: Checkout nem reliability suite (private)
+        uses: actions/checkout@v5
+        with:
+         repository: ARPST-UniMelb/NEM-reliability-suite
+         token: ${{ secrets.NEM_SUITE_PAT }}
+         path: NEM-reliability-suite
+      - name: Copy nem12 data
+        run: |
+         rsync -a NEM-reliability-suite/data/nem12 ./src/sample_data/
+         echo "nem12 data copied successfully"
       - uses: actions/checkout@v5
       - uses: julia-actions/setup-julia@v2
         with:

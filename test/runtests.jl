@@ -2,5 +2,5 @@ using PRASNEM
 using Test
 
 @testset "PRASNEM.jl" begin
-    # Write your tests here.
+    include("test_create_system.jl")
 end
