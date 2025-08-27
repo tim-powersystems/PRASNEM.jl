@@ -109,7 +109,7 @@ function parse_to_pras_format()
         #TODO: Add the SystemModel creation function here
         sys = SystemModel(gens, stors, genstors, start_dt:units.T(units.L):end_dt, regions.load[1, :])
     else
-        
+        #TODO: Update the LinesInterfaces function
         lines, interfaces, line_interface_attribution = createLinesInterfaces(lines_input_file, units, regions_selected)
 
         # TODO: Update the SystemModel function here
