@@ -46,7 +46,7 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - name: Add private package PISP
-        run: julia -e 'using Pkg; Pkg.add(url="https://x-access-token:${{ secrets.PISP_PAT }}@github.com/ARPST-UniMelb/PISP.jl.git")'
+        run: julia -e 'using Pkg; Pkg.develop(url="https://x-access-token:${{ secrets.PISP_PAT }}@github.com/ARPST-UniMelb/PISP.jl.git")'
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
