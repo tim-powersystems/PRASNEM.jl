@@ -40,7 +40,11 @@ jobs:
         run: |
          rsync -a NEM-reliability-suite/data/nem12 ./data/
          echo "nem12 data copied successfully"
-      - name: Add private package
+      - name: Set up Julia
+        uses: julia-actions/setup-julia@v1
+        with:
+          version: '1.11'
+      - name: Add private package PISP
         run: |
           using Pkg
           Pkg.add(url="https://x-access-token:${{ secrets.PISP_PAT }}@github.com/ARPST-UniMelb/PISP.jl.git")
