@@ -6,7 +6,7 @@ using Dates
 using DataFrames
 import Base.Threads
 
-using Pkg; Pkg.develop(url="https://github.com/ARPST-UniMelb/PISP.jl"); using PISP
+using Pkg; Pkg.develop(url="../PISP.jl"); using PISP
 
 # Include the parser files
 include("./parser/core.jl")

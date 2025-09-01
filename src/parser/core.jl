@@ -11,7 +11,7 @@ function parse_to_pras_format()
 
     # ---- CHANGE INPUTS HERE ----
 
-    scenarios = [2]  # 1 is progressive change, 2 is step change, 3 is green hydrogen exports
+    scenario = 2  # 1 is progressive change, 2 is step change, 3 is green hydrogen exports
     regions_selected = collect(1:12) # can select a subset or set to empty for copperplate []
     
     # Select generator technologies to exclude (to do studies with selected generators off)
@@ -87,17 +87,20 @@ function parse_to_pras_format()
 
     # ---- CREATE PRAS FILE ----
     println("Creating PRAS file from input data...")
+    println("Scenario: ", scenario)
     println("Regions: ", if isempty(regions_selected) "All" else regions_selected end )
     println("Timeseries: ", start_dt,": ", units.T(units.L), " :", end_dt)
     println("Excluded tech/fuel: ", if isempty(gentech_excluded) "None" else gentech_excluded end)
     println("Excluded aliases: ", if isempty(alias_excluded) "None" else alias_excluded end)
+    println("Input folder: ", timeseries_folder)
 
-    regions = createRegions(timeseries_folder, units, regions_selected, scenarios, start_dt, end_dt)
+    regions = createRegions(timeseries_folder, units, regions_selected, scenario, start_dt, end_dt)
     gens, gen_region_attribution = createGenerators(generator_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
-        scenarios=scenarios, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded)
-    stors, stors_region_attribution = createStorages(storages_input_file, generator_input_file, units, regions_selected; 
-        gentech_excluded=gentech_excluded, alias_excluded=alias_excluded)
-    
+        scenarios=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded)
+    stors, stors_region_attribution = createStorages(storages_input_file, timeseries_folder, units, regions_selected; 
+        scenarios=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded)
+
+
     # TODO: Develop these functions
     # 
     # genstors, genstors_region_attribution = createGeneratorStorages(generatorstorage_inflows_input_file, units, regions_selected, start_dt, end_dt; 

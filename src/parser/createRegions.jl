@@ -25,7 +25,7 @@ function createRegions(timeseries_folder, units, region_names::Union{Vector{Int}
 
         return Regions{units.N,units.P}( #timesteps, units
             ["All"], # Names
-            reshape(demand, 1, units.N) # Load (in MW) for the single region and all timesteps
+            reshape(demand_values_rounded, 1, units.N) # Load (in MW) for the single region and all timesteps
         )
     else
 
