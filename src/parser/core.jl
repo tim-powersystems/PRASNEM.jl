@@ -75,7 +75,7 @@ function parse_to_pras_format()
     # Define input and output full file paths
     #load_input_file = joinpath(input_folder, folder_name_timeseries, load_input_filename)
     #load_output_file = joinpath(output_folder, "temp", load_output_filename)
-    generator_input_file = joinpath(input_folder, generator_input_filename)
+    generators_input_file = joinpath(input_folder, generator_input_filename)
     timeseries_folder = joinpath(input_folder, folder_name_timeseries)
     storages_input_file = joinpath(input_folder, storages_input_filename)
     generatorstorage_inflows_input_file = joinpath(input_folder, generatorstorage_inflows_input_filename)
@@ -96,16 +96,12 @@ function parse_to_pras_format()
     println("Input folder: ", timeseries_folder)
 
     regions = createRegions(timeseries_folder, units, regions_selected, scenario, start_dt, end_dt)
-    gens, gen_region_attribution = createGenerators(generator_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
+    gens, gen_region_attribution = createGenerators(generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter)
     stors, stors_region_attribution = createStorages(storages_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter)
-
-
-    # TODO: Develop these functions
-    # 
-    # genstors, genstors_region_attribution = createGeneratorStorages(generatorstorage_inflows_input_file, units, regions_selected, start_dt, end_dt; 
-    #     scenarios=scenarios, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded)
+    genstors, genstor_region_attribution = createGenStorages(storages_input_file, generator_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
+        scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter)
 
     if length(regions_selected) == 0
         # If copperplate model is desired
