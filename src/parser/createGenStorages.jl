@@ -47,6 +47,8 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
     filter!(row -> row[:hydro_year] == hydro_year, timeseries_inflows)
     inflows_filtered = PISP.filterSortTimeseriesData(timeseries_inflows, units, start_dt, end_dt, DataFrame(), "", scenario, "gen_id", combined_data.id[:])
 
+    # Now calculate which 
+
     # Initialise the data for the GenStor Object
     num_generatorstorages = nrow(combined_data)
     inflow_data = zeros(Int, num_generatorstorages, units.N)
@@ -109,8 +111,6 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
             inflow_data[idx, :] .= round.(Int, gridinjectioncapacity_data[idx, :] * default_hydro_values["default_static_inflow"])
         end
 
-
-
         # For all objects: Set the charging capacity as grid withdrawal + inflows for each timestep (to always allow for the inflows) - this charge capacity doesnt matter too much
         chargecapacity_data[idx, :] .= gridwithdrawalcapacity_data[idx, :] .+ inflow_data[idx, :]
         dischargecapacity_data[idx, :] .= gridinjectioncapacity_data[idx, :]
@@ -123,8 +123,8 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
         # If copperplate model is desired, all generators are in the same region
         genstor_region_attribution = [1:num_generatorstorages]
     else
-        genstor_groups = groupby(combined_data[!,[:bus_id, :id_ascending]], :bus_id)
-        genstor_region_attribution = [first(group.id_ascending):last(group.id_ascending) for group in genstor_groups]
+        # The combined data already includes the individual units, so no need to repeat bus_ids
+        genstor_region_attribution = get_unit_region_assignment(regions_selected, combined_data.bus_id)
     end
 
 

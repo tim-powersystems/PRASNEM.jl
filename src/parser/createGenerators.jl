@@ -1,8 +1,8 @@
-function createGenerators(generator_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
+function createGenerators(generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenario=2, gentech_excluded=[], alias_excluded=[], investment_filter=[0], active_filter=[1], get_only_hydro=false)
 
     # Read in all the metadata of the generators
-    gen_info = CSV.read(generator_input_file, DataFrame)
+    gen_info = CSV.read(generators_input_file, DataFrame)
 
     # Filter all the hydro generators => They are genstor objects
     if get_only_hydro
@@ -115,13 +115,14 @@ function createGenerators(generator_input_file, timeseries_folder, units, region
         end
     end
 
+    # ====================== Gen-Region Attribution ===========================
     # Calculate the gen_region_attribution
     if regions_selected == []
         # If copperplate model is desired, all generators are in the same region
-        gen_region_attribution = [1:nrow(gen_info)]
+        gen_region_attribution = [1:Ngens]
     else
-        gen_groups = groupby(gen_info[!,[:bus_id, :id_ascending]], :bus_id)
-        gen_region_attribution = [first(group.id_ascending):last(group.id_ascending) for group in gen_groups]
+        all_bus_ids = vcat([fill(row.bus_id, row.n) for row in eachrow(gen_info)]...)
+        gen_region_attribution = get_unit_region_assignment(regions_selected, all_bus_ids)
     end
 
     return Generators{units.N, units.L, units.T, units.P}(

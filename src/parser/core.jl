@@ -1,10 +1,10 @@
 
-include("./filterSortTimeseriesData.jl") # this is a helper function to filter and sort timeseries data
 include("./createRegions.jl")
 include("./createGenerators.jl")
 include("./createStorages.jl")
 include("./createGenStorages.jl")
 include("./createLinesInterfaces.jl")
+include("./helperFunctions.jl") # this includes helper functions such as get_unit_region_assignment
 
 
 function parse_to_pras_format()
@@ -12,7 +12,7 @@ function parse_to_pras_format()
     # ---- CHANGE INPUTS HERE ----
 
     scenario = 2  # 1 is progressive change, 2 is step change, 3 is green hydrogen exports
-    regions_selected = collect(1:12) # can select a subset or set to empty for copperplate []
+    regions_selected = collect(1:12) # can select a subset or set to empty for copperplate [], note to select regions in ascending order!
     
     # Select generator technologies to exclude (to do studies with selected generators off)
     gentech_excluded = [] # can exclude a subset or set to empty for all [] - works for fuel, tech or both
@@ -57,6 +57,7 @@ function parse_to_pras_format()
 
     # Define the path to the input and output folder (CAN CHANGE AS NEEDED)
     input_folder = joinpath(current_working_directory, "src", "sample_data", "nem12")
+    output_folder = joinpath(current_working_directory, "src", "sample_data", "pras_files")
 
     # Define input and output file names (CAN CHANGE AS NEEDED, JUST ENSURE THEY ARE THE SAME FORMAT)
     generator_input_filename = "Generator.csv"
@@ -107,7 +108,6 @@ function parse_to_pras_format()
                     lines, line_interface_attribution,
                     start_dt:units.T(units.L):end_dt # Timestamps
                     )
-
     end 
 
     savemodel(sys, outfile=hdf5_filepath)

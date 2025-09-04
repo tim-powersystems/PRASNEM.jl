@@ -176,8 +176,8 @@ function createStorages(storages_input_file, timeseries_folder, units, regions_s
         # If copperplate model is desired, all generators are in the same region
         stors_region_attribution = [1:nrow(stor_data)]
     else
-        stors_groups = groupby(stor_data[!,[:bus_id, :id_ascending]], :bus_id)
-        stors_region_attribution = [first(group.id_ascending):last(group.id_ascending) for group in stors_groups]
+        all_bus_ids = vcat([fill(row.bus_id, row.n) for row in eachrow(stor_data)]...)
+        stors_region_attribution = get_unit_region_assignment(regions_selected, all_bus_ids)
     end
 
     return Storages{units.N,units.L,units.T,units.P,units.E}(
