@@ -1,9 +1,8 @@
 function createGenStorages(storages_input_file, generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
-    scenario=2, hydro_year::String="Average", gentech_excluded=[], alias_excluded=[], investment_filter=[0], active_filter=[1], default_hydro_values=Dict{String, Any}())
+    scenario=2, gentech_excluded=[], alias_excluded=[], investment_filter=[0], active_filter=[1], 
+    default_hydro_values=Dict{String, Any}(), hydro_year::String="Average")
 
 
-    # Setting some default values (can be changed!)
-    default_discharge_time_reservoirs = 
 
     # Now use the functions to get hydro generators from the generator and the storages data
     gens, gen_region_attribution = createGenerators(generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
@@ -39,7 +38,14 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
     inflows_file = joinpath(timeseries_folder, "Generator_inflow_sched.csv")
     timeseries_inflows = CSV.read(inflows_file, DataFrame)
     timeseries_inflows.date = DateTime.(timeseries_inflows.date, dateformat"yyyy-mm-dd HH:MM:SS")
-    inflows_filtered = PISP.filterSortTimeseriesData(timeseries_inflows, units, start_dt, end_dt, DataFrame(), "", scenario, "alias", String.(combined_data.alias))
+    if hydro_year in unique(timeseries_inflows.hydro_year)
+        # If the provided hydro year is available, filter by it
+        filter!(row -> row[:hydro_year] == hydro_year, timeseries_inflows)
+    else
+        error("Provided hydro year $hydro_year not found in inflow data! Available years are: $(unique(timeseries_inflows.hydro_year))")
+    end
+    filter!(row -> row[:hydro_year] == hydro_year, timeseries_inflows)
+    inflows_filtered = PISP.filterSortTimeseriesData(timeseries_inflows, units, start_dt, end_dt, DataFrame(), "", scenario, "gen_id", combined_data.id[:])
 
     # Initialise the data for the GenStor Object
     num_generatorstorages = nrow(combined_data)

@@ -24,6 +24,7 @@ function parse_to_pras_format()
     start_date = "2025-01-07 00:00:00" #change as needed
     end_date = "2025-01-13 23:00:00" #change as needed
     folder_name_timeseries = "schedule-1w" # change as needed
+    hydro_year = "Average" # Hydro reference year can be a year (as string) or "Average"
 
     # Find timestep count
     start_dt = DateTime(start_date, dateformat"yyyy-mm-dd HH:MM:SS")
@@ -46,17 +47,6 @@ function parse_to_pras_format()
     default_hydro_values["reservoir_discharge_efficiency"] = 1.0
     default_hydro_values["reservoir_carryover_efficiency"] = 1.0
     default_hydro_values["default_static_inflow"] = 0.0 # As a factor of the grid injection capacity (e.g. 0.5 means that the inflow is 50% of the grid injection capacity) - this mostly applies to PHSP
-
-
-    hydro_reference_year = "Average"
-    generator_shares_by_location = Dict(
-        "Snowy" => Dict(
-            "TUMUT3" => 0.4436, "BLOWERNG" => 0.0197, "UPPTUMUT" => 0.1518, "GUTHEGA" => 0.0148, "MURRAY1" => 0.2341, "MURRAY2" => 0.1360),
-        "TAS" => Dict(
-            "BASTYAN" => 0.0367, "LI_WY_CA" => 0.0812, "CETHANA" => 0.0390, "DEVILS_G" => 0.0276, "FISHER" => 0.0198, "GORDON" => 0.1985,
-            "JBUTTERS" => 0.0662, "LK_ECHO" => 0.0149, "LEM_WIL" => 0.0375, "MACKNTSH" => 0.0367, "MEADOWBK" => 0.0184, "POAT110" => 0.1378,
-            "REECE1" => 0.1062, "TARRALEA" => 0.0413, "TREVALLN" => 0.0427, "TRIBUTE" => 0.0380, "TUNGATIN" => 0.0574)
-    )
 
     
 
@@ -97,17 +87,18 @@ function parse_to_pras_format()
     stors, stors_region_attribution = createStorages(storages_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter)
     genstors, genstors_region_attribution = createGenStorages(storages_input_file, generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
-        scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, default_hydro_values=default_hydro_values)
+        scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, 
+        default_hydro_values=default_hydro_values, hydro_year=hydro_year)
 
     if length(regions_selected) == 0
         # If copperplate model is desired
         sys = SystemModel(gens, stors, genstors, start_dt:units.T(units.L):end_dt, regions.load[1, :])
     else 
         # Else, get the lines and interfaces for the relevant regions
-        #TODO: Update the LinesInterfaces function
-        lines, interfaces, line_interface_attribution = createLinesInterfaces(lines_input_file, units, regions_selected)
+        lines, interfaces, line_interface_attribution = createLinesInterfaces(lines_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
+            scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter)
 
-        # TODO: Update the SystemModel function here
+        # Create the system model
         sys = SystemModel(
                     regions, interfaces,
                     gens, gen_region_attribution, 
@@ -120,6 +111,7 @@ function parse_to_pras_format()
     end 
 
     savemodel(sys, outfile=hdf5_filepath)
+    println("PRAS file created at: ", hdf5_filepath)
 
     return sys
 
