@@ -7,28 +7,39 @@ include("./createLinesInterfaces.jl")
 include("./helperFunctions.jl") # this includes helper functions such as get_unit_region_assignment
 
 
-function parse_to_pras_format()
+function parse_to_pras_format(start_dt::ZonedDateTime, end_dt::ZonedDateTime, input_folder, output_folder,
+    folder_name_timeseries::String,
+    regions_selected=collect(1:12), # can select a subset or set to empty for copperplate []
+    scenario::Int=2, # 1 is progressive change, 2 is step change
+    gentech_excluded=[], # can exclude a subset or set to empty for all []
+    alias_excluded=[], # can select a subset or set to empty for all []
+    investment_filter=[0], # only include assets that are not selected for investment
+    active_filter=[1], # only include active assets
+    hydro_year::String="Average" # Hydro reference year can be a year (as string) or "Average"
+    )
 
     # ---- CHANGE INPUTS HERE ----
 
-    scenario = 2  # 1 is progressive change, 2 is step change, 3 is green hydrogen exports
-    regions_selected = collect(1:12) # can select a subset or set to empty for copperplate [], note to select regions in ascending order!
+    #scenario = 2  # 1 is progressive change, 2 is step change, 3 is green hydrogen exports
+    #regions_selected = collect(1:12) # can select a subset or set to empty for copperplate [], note to select regions in ascending order!
     
     # Select generator technologies to exclude (to do studies with selected generators off)
-    gentech_excluded = [] # can exclude a subset or set to empty for all [] - works for fuel, tech or both
-    alias_excluded = [] # can select a subset or set to empty for all []
-    investment_filter = [0] # only include assets that are not selected for investment 
-    active_filter = [1] # only include active assets
+    #gentech_excluded = [] # can exclude a subset or set to empty for all [] - works for fuel, tech or both
+    #alias_excluded = [] # can select a subset or set to empty for all []
+    #investment_filter = [0] # only include assets that are not selected for investment 
+    #active_filter = [1] # only include active assets
 
     # Only dates in data are FY25-26, FY30-31, FY35-36, FY40-41 and FY50-51
-    start_date = "2025-01-07 00:00:00" #change as needed
-    end_date = "2025-01-13 23:00:00" #change as needed
-    folder_name_timeseries = "schedule-1w" # change as needed
-    hydro_year = "Average" # Hydro reference year can be a year (as string) or "Average"
+    #start_date = "2025-01-07 00:00:00" #change as needed
+    #end_date = "2025-01-13 23:00:00" #change as needed
+    #folder_name_timeseries = "schedule-1w" # change as needed
+    #hydro_year = "Average" # Hydro reference year can be a year (as string) or "Average"
 
     # Find timestep count
-    start_dt = DateTime(start_date, dateformat"yyyy-mm-dd HH:MM:SS")
-    end_dt = DateTime(end_date, dateformat"yyyy-mm-dd HH:MM:SS")
+    #start_dt = DateTime(start_date, dateformat"yyyy-mm-dd HH:MM:SS")
+    #end_dt = DateTime(end_date, dateformat"yyyy-mm-dd HH:MM:SS")
+    
+    timezone = tz"Australia/Sydney"
     timestep_count = Int(round((Dates.value(end_dt - start_dt) / (60*60*1000)) + 1)) # Dates.value returns ms
 
     units = (N = timestep_count, # Number of timesteps
@@ -53,11 +64,11 @@ function parse_to_pras_format()
     # ---- SETUP INPUT AND OUTPUT FILES ----
 
     # Get the current working directory
-    current_working_directory = pwd()
+    #current_working_directory = pwd()
 
     # Define the path to the input and output folder (CAN CHANGE AS NEEDED)
-    input_folder = joinpath(current_working_directory, "src", "sample_data", "nem12")
-    output_folder = joinpath(current_working_directory, "src", "sample_data", "pras_files")
+    #input_folder = joinpath(current_working_directory, "src", "sample_data", "nem12")
+    #output_folder = joinpath(current_working_directory, "src", "sample_data", "pras_files")
 
     # Define input and output file names (CAN CHANGE AS NEEDED, JUST ENSURE THEY ARE THE SAME FORMAT)
     generator_input_filename = "Generator.csv"
@@ -93,7 +104,7 @@ function parse_to_pras_format()
 
     if length(regions_selected) == 0
         # If copperplate model is desired
-        sys = SystemModel(gens, stors, genstors, start_dt:units.T(units.L):end_dt, regions.load[1, :])
+        sys = SystemModel(gens, stors, genstors, ZonedDateTime(start_dt, timezone):units.T(units.L):ZonedDateTime(end_dt, timezone), regions.load[1, :])
     else 
         # Else, get the lines and interfaces for the relevant regions
         lines, interfaces, line_interface_attribution = createLinesInterfaces(lines_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
@@ -106,7 +117,7 @@ function parse_to_pras_format()
                     stors, stors_region_attribution,
                     genstors, genstors_region_attribution,
                     lines, line_interface_attribution,
-                    start_dt:units.T(units.L):end_dt # Timestamps
+                    ZonedDateTime(start_dt, timezone):units.T(units.L):ZonedDateTime(end_dt, timezone) # Timestamps
                     )
     end 
 

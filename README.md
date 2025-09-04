@@ -13,20 +13,33 @@ This repository contains:
 
 ## Getting Started
 
-1. Download and install Git Large File Share as described here: https://www.git-lfs.com
-2. Creating a new PRAS case file (*python, optional*)
-    - Install python environment including the packages `os` and `h5py`
-    - In the file `create_nem_pras_file.py`:
-        - Adjust the parameters to desired case (including study year, network model, ISP scenario)
-        - Run the file. The output will be saved as a `*.pras` file in the hdf5-format.
-3. Run PRASNEM (*julia*)
-    - Develop the package PRASNEM by running
-        ```Julia
-            using Pkg; Pkg.develop("./PRASNEM")
-        ```
-    - Run the package
-        ```Julia
-            using PRASNEM
-            file_name = "src/sample_data/output/2030-07-01_to_2031-06-30_12_regions_nem.pras"
-            PRASNEM.run_pras_study(file_name, 100)
-        ```
+Develop the package PRASNEM by running
+```Julia
+using Pkg; Pkg.develop("./PRASNEM")
+```
+
+#### Creating a new PRAS case file
+Example:
+```Julia
+using PRASNEM
+using Dates
+
+start_dt = DateTime("2025-01-07 00:00:00", dateformat"yyyy-mm-dd HH:MM:SS")
+end_dt = DateTime("2025-01-13 23:00:00", dateformat"yyyy-mm-dd HH:MM:SS")
+input_folder = joinpath(pwd(), "src", "sample_data", "nem12")
+output_folder = joinpath(pwd(), "src", "sample_data", "pras_files")
+timeseries_folder = joinpath(input_folder, "schedule-1w")
+sys = PRASNEM.parser_to_pras_format(start_dt, end_dt, input_folder, output_folder, timeseries_folder);
+```
+
+#### Evaulating reliability
+Example if system was created above:
+```Julia
+PRASNEM.run_pras_study(sys, 100)
+```
+Example if reading system from file:
+```Julia
+using PRASNEM
+file_name = "src/sample_data/pras_files/2025-01-07_to_2025-01-13_123456789101112_regions_nem.pras"
+PRASNEM.run_pras_study(file_name, 100)
+```
