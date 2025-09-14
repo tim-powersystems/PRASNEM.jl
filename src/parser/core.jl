@@ -7,15 +7,14 @@ include("./createLinesInterfaces.jl")
 include("./helperFunctions.jl") # this includes helper functions such as get_unit_region_assignment
 
 
-function parse_to_pras_format(start_dt::ZonedDateTime, end_dt::ZonedDateTime, input_folder, output_folder,
-    folder_name_timeseries::String,
+function parse_to_pras_format(start_dt::DateTime, end_dt::DateTime, input_folder, output_folder,
+    folder_name_timeseries::String;
     regions_selected=collect(1:12), # can select a subset or set to empty for copperplate []
     scenario::Int=2, # 1 is progressive change, 2 is step change
     gentech_excluded=[], # can exclude a subset or set to empty for all []
     alias_excluded=[], # can select a subset or set to empty for all []
     investment_filter=[0], # only include assets that are not selected for investment
-    active_filter=[1], # only include active assets
-    hydro_year::String="Average" # Hydro reference year can be a year (as string) or "Average"
+    active_filter=[1] # only include active assets
     )
 
     # ---- CHANGE INPUTS HERE ----
@@ -100,9 +99,9 @@ function parse_to_pras_format(start_dt::ZonedDateTime, end_dt::ZonedDateTime, in
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter)
     genstors, genstors_region_attribution = createGenStorages(storages_input_file, generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, 
-        default_hydro_values=default_hydro_values, hydro_year=hydro_year)
+        default_hydro_values=default_hydro_values)
 
-    if length(regions_selected) == 0
+    if length(regions_selected) <= 1
         # If copperplate model is desired
         sys = SystemModel(gens, stors, genstors, ZonedDateTime(start_dt, timezone):units.T(units.L):ZonedDateTime(end_dt, timezone), regions.load[1, :])
     else 

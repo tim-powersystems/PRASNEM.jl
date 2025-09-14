@@ -22,8 +22,35 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
     stor_data = CSV.read(storages_input_file, DataFrame)
     filter!(row -> row[:tech] == "PS", stor_data)
 
+    # =====================================================
+    # Now read in the time-varying data for the genstor objects
+    
+    # Inflow data
+    inflows_file = joinpath(timeseries_folder, "Generator_inflow_sched.csv")
+    timeseries_inflows = CSV.read(inflows_file, DataFrame)
+    timeseries_inflows.date = DateTime.(timeseries_inflows.date, dateformat"yyyy-mm-dd HH:MM:SS")
+    inflows_filtered = PISP.filterSortTimeseriesData(timeseries_inflows, units, start_dt, end_dt, DataFrame(), "", scenario, "gen_id", gen_data.id[:])
+
+    # Add here the timevarying data for the storages if available in the future
+    # Currently, there is no time-varying data for the storages in the model
+    
+    # Filter for hydro year is deactivated for now
+    #if hydro_year in unique(timeseries_inflows.hydro_year)
+        # If the provided hydro year is available, filter by it
+    #    filter!(row -> row[:hydro_year] == hydro_year, timeseries_inflows)
+    #else
+    #    error("Provided hydro year $hydro_year not found in inflow data! Available years are: $(unique(timeseries_inflows.hydro_year))")
+    #end
+    #filter!(row -> row[:hydro_year] == hydro_year, timeseries_inflows)
+    
+
+    # =====================================================
     # Now combine both dataframes
     combined_data_detailed = vcat(gen_data, stor_data, cols=:union)
+
+    if nrow(combined_data_detailed) != length(unique(combined_data_detailed.id))
+        error("There are duplicate IDs in the combined generator and storage data! Please ensure that all IDs are unique across both datasets or adjust code accordingly.")
+    end
 
     combined_data = DataFrame(longid=vcat(gens.names, stors.names))
     combined_data[!, "id"] = parse.(Int, [split(s, "_")[1] for s in combined_data[!, "longid"]])
@@ -33,21 +60,7 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
     sort!(combined_data, [:bus_id])
     combined_data.id_ascending .= 1:nrow(combined_data)
 
-    # Now read in the remaining time-varying data for the genstor objects
-    # Inflow data
-    inflows_file = joinpath(timeseries_folder, "Generator_inflow_sched.csv")
-    timeseries_inflows = CSV.read(inflows_file, DataFrame)
-    timeseries_inflows.date = DateTime.(timeseries_inflows.date, dateformat"yyyy-mm-dd HH:MM:SS")
-    if hydro_year in unique(timeseries_inflows.hydro_year)
-        # If the provided hydro year is available, filter by it
-        filter!(row -> row[:hydro_year] == hydro_year, timeseries_inflows)
-    else
-        error("Provided hydro year $hydro_year not found in inflow data! Available years are: $(unique(timeseries_inflows.hydro_year))")
-    end
-    filter!(row -> row[:hydro_year] == hydro_year, timeseries_inflows)
-    inflows_filtered = PISP.filterSortTimeseriesData(timeseries_inflows, units, start_dt, end_dt, DataFrame(), "", scenario, "gen_id", combined_data.id[:])
-
-    # Now calculate which 
+    # =====================================================
 
     # Initialise the data for the GenStor Object
     num_generatorstorages = nrow(combined_data)
@@ -105,8 +118,8 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
         end
 
         # Set the inflow data
-        if string(row.alias) in names(inflows_filtered)
-            inflow_data[idx, :] = round.(Int, inflows_filtered[!, string(row.alias)])
+        if string(row.id) in names(inflows_filtered)
+            inflow_data[idx, :] = round.(Int, inflows_filtered[!, string(row.id)])
         else
             inflow_data[idx, :] .= round.(Int, gridinjectioncapacity_data[idx, :] * default_hydro_values["default_static_inflow"])
         end

@@ -162,7 +162,16 @@ function createLinesInterfaces(lines_input_file, timeseries_folder, units, regio
 
     # ========================== Line-Interface-Assignments ===============================
     # Create the line-interface assignment
-    line_interface_assignment = [first(group.id_ascending):last(group.id_ascending) for group in line_groups]
+    
+    # Add the interface ids to the line_details dataframe
+    line_details[!, :interface_id] = zeros(Int, N_lines)
+    for (i, group) in enumerate(line_groups)
+        idx_lines = group.id_ascending
+        line_details.interface_id[idx_lines] .= i
+    end
+    # Now calculate the line-interface assignment
+    line_interface_assignment = get_unit_region_assignment(unique(line_details.interface_id), line_details.interface_id)
+
 
 
     return Lines{units.N,units.L,units.T,units.P}(

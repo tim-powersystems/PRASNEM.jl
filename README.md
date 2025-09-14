@@ -29,17 +29,24 @@ end_dt = DateTime("2025-01-13 23:00:00", dateformat"yyyy-mm-dd HH:MM:SS")
 input_folder = joinpath(pwd(), "src", "sample_data", "nem12")
 output_folder = joinpath(pwd(), "src", "sample_data", "pras_files")
 timeseries_folder = joinpath(input_folder, "schedule-1w")
-sys = PRASNEM.parser_to_pras_format(start_dt, end_dt, input_folder, output_folder, timeseries_folder);
+sys = PRASNEM.parse_to_pras_format(start_dt, end_dt, input_folder, output_folder, timeseries_folder; regions_selected=collect(1:12));
 ```
 
 #### Evaulating reliability
-Example if system was created above:
+Example if system was created above and is available in memory:
 ```Julia
 PRASNEM.run_pras_study(sys, 100)
 ```
+
 Example if reading system from file:
 ```Julia
 using PRASNEM
 file_name = "src/sample_data/pras_files/2025-01-07_to_2025-01-13_123456789101112_regions_nem.pras"
 PRASNEM.run_pras_study(file_name, 100)
+```
+
+
+#### Further PRAS functions
+```Julia
+
 ```

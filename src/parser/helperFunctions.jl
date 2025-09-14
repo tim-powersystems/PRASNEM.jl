@@ -11,12 +11,13 @@ function get_unit_region_assignment(regions_selected, bus_id_list)
     unit_region_attribution = repeat([1:0], length(regions_selected))
     data = DataFrame(bus_id=bus_id_list, id_ascending=1:length(bus_id_list))
     counter = 1
-    for i in regions_selected
-        group = data[findall(data.bus_id .== i), [:id_ascending]]
+    for i in 1:length(regions_selected)
+        region_id = regions_selected[i]
+        group = data[findall(data.bus_id .== region_id), [:id_ascending]]
         if isempty(group) && counter == 1
             unit_region_attribution[i] = 1:0 # If first region doesnt have any unit, set to empty
         elseif isempty(group)
-            unit_region_attribution[i] = last(unit_region_attribution[i-1])+1:last(unit_region_attribution[i-1]) # If region doesnt have any genstor, set to last index of previous region
+            unit_region_attribution[i] = last(unit_region_attribution[i-1])+1:last(unit_region_attribution[i-1]) # If region doesnt have any unit, set to last index of previous region
         else
             unit_region_attribution[i] = first(group.id_ascending):last(group.id_ascending)
         end
