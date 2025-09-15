@@ -27,9 +27,8 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
     
     # Inflow data
     inflows_file = joinpath(timeseries_folder, "Generator_inflow_sched.csv")
-    timeseries_inflows = CSV.read(inflows_file, DataFrame)
-    timeseries_inflows.date = DateTime.(timeseries_inflows.date, dateformat"yyyy-mm-dd HH:MM:SS")
-    inflows_filtered = PISP.filterSortTimeseriesData(timeseries_inflows, units, start_dt, end_dt, DataFrame(), "", scenario, "gen_id", gen_data.id[:])
+    timeseries_inflows = read_timeseries_file(inflows_file)
+    inflows_filtered = PISP.filterSortTimeseriesData(timeseries_inflows, units, start_dt, end_dt, DataFrame(), "", scenario, "id_gen", gen_data.id_gen[:])
 
     # Add here the timevarying data for the storages if available in the future
     # Currently, there is no time-varying data for the storages in the model
@@ -48,16 +47,17 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
     # Now combine both dataframes
     combined_data_detailed = vcat(gen_data, stor_data, cols=:union)
 
+    # ToDo: This needs to be changed!!!
     if nrow(combined_data_detailed) != length(unique(combined_data_detailed.id))
         error("There are duplicate IDs in the combined generator and storage data! Please ensure that all IDs are unique across both datasets or adjust code accordingly.")
     end
 
     combined_data = DataFrame(longid=vcat(gens.names, stors.names))
-    combined_data[!, "id"] = parse.(Int, [split(s, "_")[1] for s in combined_data[!, "longid"]])
-    combined_data = leftjoin(combined_data, combined_data_detailed, on="id")
+    combined_data[!, "id_genstor"] = parse.(Int, [split(s, "_")[1] for s in combined_data[!, "longid"]])
+    combined_data = leftjoin(combined_data, combined_data_detailed, on="id_genstor")
 
     # And sort by region/bus id
-    sort!(combined_data, [:bus_id])
+    sort!(combined_data, [:id_bus])
     combined_data.id_ascending .= 1:nrow(combined_data)
 
     # =====================================================
@@ -118,8 +118,8 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
         end
 
         # Set the inflow data
-        if string(row.id) in names(inflows_filtered)
-            inflow_data[idx, :] = round.(Int, inflows_filtered[!, string(row.id)])
+        if string(row.id_gen) in names(inflows_filtered)
+            inflow_data[idx, :] = round.(Int, inflows_filtered[!, string(row.id_gen)])
         else
             inflow_data[idx, :] .= round.(Int, gridinjectioncapacity_data[idx, :] * default_hydro_values["default_static_inflow"])
         end
@@ -137,7 +137,7 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
         genstor_region_attribution = [1:num_generatorstorages]
     else
         # The combined data already includes the individual units, so no need to repeat bus_ids
-        genstor_region_attribution = get_unit_region_assignment(regions_selected, combined_data.bus_id)
+        genstor_region_attribution = get_unit_region_assignment(regions_selected, combined_data.id_bus)
     end
 
 

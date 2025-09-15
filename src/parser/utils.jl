@@ -9,11 +9,11 @@ function get_unit_region_assignment(regions_selected, bus_id_list)
     """
     # This function takes in a list of regions selected and a list of bus IDs for each unit
     unit_region_attribution = repeat([1:0], length(regions_selected))
-    data = DataFrame(bus_id=bus_id_list, id_ascending=1:length(bus_id_list))
+    data = DataFrame(id_bus=bus_id_list, id_ascending=1:length(bus_id_list))
     counter = 1
     for i in 1:length(regions_selected)
         region_id = regions_selected[i]
-        group = data[findall(data.bus_id .== region_id), [:id_ascending]]
+        group = data[findall(data.id_bus .== region_id), [:id_ascending]]
         if isempty(group) && counter == 1
             unit_region_attribution[i] = 1:0 # If first region doesnt have any unit, set to empty
         elseif isempty(group)
@@ -25,4 +25,23 @@ function get_unit_region_assignment(regions_selected, bus_id_list)
     end
 
     return unit_region_attribution
+end
+
+
+# ====================================================
+
+function read_timeseries_file(file_path::String)
+    if isfile(file_path)
+        # If the file exists, read it
+        timeseries_data = CSV.read(file_path, DataFrame)
+
+        if typeof(timeseries_data.date[1]) != DateTime
+            # Convert the date column to DateTime format
+            timeseries_data.date = DateTime.(timeseries_data.date, dateformat"yyyy-mm-dd HH:MM:SS")
+        end
+        return timeseries_data
+    else
+        # If the file does not exist, return an empty DataFrame
+        error("The timeseries file $file_path does not exist.")
+    end
 end

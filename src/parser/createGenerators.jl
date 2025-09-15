@@ -17,7 +17,7 @@ function createGenerators(generators_input_file, timeseries_folder, units, regio
 
     # Filter only the generators in the selected regions
     if regions_selected != []
-        filter!(row -> row[:bus_id] in regions_selected, gen_info)
+        filter!(row -> row[:id_bus] in regions_selected, gen_info)
     end
 
     # Filter the file for only the relevant selected generators
@@ -25,8 +25,8 @@ function createGenerators(generators_input_file, timeseries_folder, units, regio
     filter!(row -> !(row[:tech] in gentech_excluded), gen_info)
     filter!(row -> !(row[:fuel] in gentech_excluded), gen_info)
 
-    # Sort the generators by the region/bus id
-    sort!(gen_info, :bus_id)
+    # Sort the generators by the region/bus id_gen
+    sort!(gen_info, :id_bus)
     # Create a new ID for the generators with the new sorting
     gen_info.id_ascending .= 1:nrow(gen_info)
 
@@ -48,22 +48,20 @@ function createGenerators(generators_input_file, timeseries_folder, units, regio
 
     # Get the timeseries data of the n generators
     timeseries_file_n = joinpath(timeseries_folder, "Generator_n_sched.csv")
-    n = CSV.read(timeseries_file_n, DataFrame)
-    n.date = DateTime.(n.date, dateformat"yyyy-mm-dd HH:MM:SS")
-    timeseries_n = PISP.filterSortTimeseriesData(n, units, start_dt, end_dt, gen_info, "n", scenario, "gen_id", gen_info.id[:])
+    n = read_timeseries_file(timeseries_file_n)
+    timeseries_n = PISP.filterSortTimeseriesData(n, units, start_dt, end_dt, gen_info, "n", scenario, "id_gen", gen_info.id_gen[:])
     
     # Update the maximum n in the gen_info dataframe
     timeseries_n_gen_ids = parse.(Int, names(select(timeseries_n, Not(:date))))
     timeseries_n_max = maximum.(eachcol(select(timeseries_n, Not(:date))))
     for i in eachindex(timeseries_n_gen_ids)
-        gen_info[gen_info.id .== timeseries_n_gen_ids[i], :n].= timeseries_n_max[i]
+        gen_info[gen_info.id_gen .== timeseries_n_gen_ids[i], :n].= timeseries_n_max[i]
     end
 
     # Get the timeseries data of the generator capacities (for renewables)
     timeseries_file_pmax = joinpath(timeseries_folder, "Generator_pmax_sched.csv")
-    pmax = CSV.read(timeseries_file_pmax, DataFrame)
-    pmax.date = DateTime.(pmax.date, dateformat"yyyy-mm-dd HH:MM:SS")
-    timeseries_pmax = PISP.filterSortTimeseriesData(pmax, units, start_dt, end_dt, gen_info, "pmax", scenario, "gen_id", gen_info.id[:])
+    pmax = read_timeseries_file(timeseries_file_pmax)
+    timeseries_pmax = PISP.filterSortTimeseriesData(pmax, units, start_dt, end_dt, gen_info, "pmax", scenario, "id_gen", gen_info.id_gen[:])
     timeseries_pmax_gen_ids = parse.(Int, names(select(timeseries_pmax, Not(:date))))
 
     # Convert the timeseries data into the PRAS format
@@ -83,12 +81,12 @@ function createGenerators(generators_input_file, timeseries_folder, units, regio
 
         # Do for each unit of the generator
         for i in 1:row.n
-            gens_names[gen_index_counter] = "$(row.id)_" * string(i)
+            gens_names[gen_index_counter] = "$(row.id_gen)_" * string(i)
             gens_categories[gen_index_counter] = row.tech
 
-            if (row.id in timeseries_pmax_gen_ids)
+            if (row.id_gen in timeseries_pmax_gen_ids)
                 # If there is time-varying data available
-                gens_cap[gen_index_counter, :] = round.(Int, timeseries_pmax[!, "$(row.id)"])
+                gens_cap[gen_index_counter, :] = round.(Int, timeseries_pmax[!, "$(row.id_gen)"])
             else
                 gens_cap[gen_index_counter, :] = fill(round(Int, row[:capacity]), units.N)
             end
@@ -98,16 +96,16 @@ function createGenerators(generators_input_file, timeseries_folder, units, regio
             gen_index_counter += 1
         end
 
-        if (row.id in timeseries_n_gen_ids)
+        if (row.id_gen in timeseries_n_gen_ids)
             # Check if the number of units changes over time
-            if (minimum(timeseries_n[!, "$(row.id)"]) < row.n)
-                println("Note: The number of units for generator id $(row.id) changes over time. Adjusting the availability accordingly.")
+            if (minimum(timeseries_n[!, "$(row.id_gen)"]) < row.n)
+                println("Note: The number of units for generator id_gen $(row.id_gen) changes over time. Adjusting the availability accordingly.")
                 # Now iterate through the different unique levels of n
-                unique_n = unique(timeseries_n[!, "$(row.id)"])
+                unique_n = unique(timeseries_n[!, "$(row.id_gen)"])
                 sort!(unique_n)
                 for un in unique_n
                     # Find all the timesteps when the number of units is equal to un
-                    timeseries_n_indices = findall(timeseries_n[!, "$(row.id)"] .== un)
+                    timeseries_n_indices = findall(timeseries_n[!, "$(row.id_gen)"] .== un)
                     # Set all the generators that are not on at these time-steps to zero
                     gens_cap[gen_index_counter - row.n + un:gen_index_counter - 1, timeseries_n_indices] .*= 0
                 end
@@ -121,7 +119,7 @@ function createGenerators(generators_input_file, timeseries_folder, units, regio
         # If copperplate model is desired, all generators are in the same region
         gen_region_attribution = [1:Ngens]
     else
-        all_bus_ids = vcat([fill(row.bus_id, row.n) for row in eachrow(gen_info)]...)
+        all_bus_ids = vcat([fill(row.id_bus, row.n) for row in eachrow(gen_info)]...)
         gen_region_attribution = get_unit_region_assignment(regions_selected, all_bus_ids)
     end
 

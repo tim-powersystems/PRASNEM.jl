@@ -3,9 +3,8 @@ function createRegions(timeseries_folder, units, region_names::Union{Vector{Int}
 
     # Read and filter the timestep load file
     load_input_file = joinpath(timeseries_folder, "Demand_load_sched.csv")
-    load_data = CSV.read(load_input_file, DataFrame)
-    load_data.date = DateTime.(load_data.date, dateformat"yyyy-mm-dd HH:MM:SS")
-    df_filtered = PISP.filterSortTimeseriesData(load_data, units, start_dt, end_dt, DataFrame(), "", scenario, "dem_id", collect(region_names))
+    load_data = read_timeseries_file(load_input_file)
+    df_filtered = PISP.filterSortTimeseriesData(load_data, units, start_dt, end_dt, DataFrame(), "", scenario, "id_dem", collect(region_names))
 
     number_of_regions = length(region_names)
 

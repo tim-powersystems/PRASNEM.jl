@@ -26,7 +26,7 @@ using Dates
 
 start_dt = DateTime("2025-01-07 00:00:00", dateformat"yyyy-mm-dd HH:MM:SS")
 end_dt = DateTime("2025-01-13 23:00:00", dateformat"yyyy-mm-dd HH:MM:SS")
-input_folder = joinpath(pwd(), "src", "sample_data", "nem12")
+input_folder = joinpath(pwd(), "src", "sample_data", "nem12-updated-csv")
 output_folder = joinpath(pwd(), "src", "sample_data", "pras_files")
 timeseries_folder = joinpath(input_folder, "schedule-1w")
 sys = PRASNEM.parse_to_pras_format(start_dt, end_dt, input_folder, output_folder, timeseries_folder; regions_selected=collect(1:12));
@@ -49,7 +49,10 @@ PRASNEM.run_pras_study(file_name, 100)
 #### Further PRAS functions
 For reference, these are possible outputs from PRAS:
 ```Julia
+using PRAS
+
+nsamples = 1000
 shortfalls, surplus, genavail, storage_energy, generator_storage_energy, flow = assess(
-    sys, SequentialMonteCarlo(samples=1000),
+    sys, SequentialMonteCarlo(samples=nsamples),
     Shortfall(), Surplus(), GeneratorAvailability(), StorageEnergy(), GeneratorStorageEnergy(), Flow());
 ```

@@ -16,7 +16,7 @@ function createStorages(storages_input_file, timeseries_folder, units, regions_s
 
     # Filter the selected regions
     if !isempty(regions_selected)
-        filter!(row -> row.bus_id in regions_selected, stor_data)
+        filter!(row -> row.id_bus in regions_selected, stor_data)
     end
 
     # Filter the gentech and alias exclusions
@@ -44,8 +44,8 @@ function createStorages(storages_input_file, timeseries_folder, units, regions_s
     stor_data.failurerate .= stor_data.fullout ./ (stor_data.mttrfull .* (1 .- stor_data.fullout))
 
 
-    # Now sort by bus_id and add new counter
-    sort!(stor_data, :bus_id)
+    # Now sort by id_bus and add new counter
+    sort!(stor_data, :id_bus)
     stor_data.id_ascending .= 1:nrow(stor_data)
 
     # ================================ Timeseries data =========================================
@@ -57,36 +57,32 @@ function createStorages(storages_input_file, timeseries_folder, units, regions_s
 
     # Get the timeseries data of the n storages
     timeseries_file_n = joinpath(timeseries_folder, "ESS_n_sched.csv")
-    n = CSV.read(timeseries_file_n, DataFrame)
-    n.date = DateTime.(n.date, dateformat"yyyy-mm-dd HH:MM:SS")
-    timeseries_n = PISP.filterSortTimeseriesData(n, units, start_dt, end_dt, stor_data, "n", scenario, "ess_id", stor_data.id[:])
+    n = read_timeseries_file(timeseries_file_n)
+    timeseries_n = PISP.filterSortTimeseriesData(n, units, start_dt, end_dt, stor_data, "n", scenario, "id_ess", stor_data.id_ess[:])
 
     # Update the maximum n in the stor_data dataframe
     timeseries_n_ess_ids = parse.(Int, names(select(timeseries_n, Not(:date))))
     timeseries_n_max = maximum.(eachcol(select(timeseries_n, Not(:date))))
     for i in eachindex(timeseries_n_ess_ids)
-        stor_data[stor_data.id .== timeseries_n_ess_ids[i], :n].= timeseries_n_max[i]
+        stor_data[stor_data.id_ess .== timeseries_n_ess_ids[i], :n].= timeseries_n_max[i]
     end
 
     # Get the timeseries data of the storage capacities - DISCHARGE
     timeseries_file_pmax = joinpath(timeseries_folder, "ESS_pmax_sched.csv")
-    pmax = CSV.read(timeseries_file_pmax, DataFrame)
-    pmax.date = DateTime.(pmax.date, dateformat"yyyy-mm-dd HH:MM:SS")
-    timeseries_pmax = PISP.filterSortTimeseriesData(pmax, units, start_dt, end_dt, stor_data, "pmax", scenario, "ess_id", stor_data.id[:])
+    pmax = read_timeseries_file(timeseries_file_pmax)
+    timeseries_pmax = PISP.filterSortTimeseriesData(pmax, units, start_dt, end_dt, stor_data, "pmax", scenario, "id_ess", stor_data.id_ess[:])
     timeseries_pmax_ess_ids = parse.(Int, names(select(timeseries_pmax, Not(:date))))
 
     # Get the timeseries data of the storage capacities - CHARGE
     timeseries_file_lmax = joinpath(timeseries_folder, "ESS_lmax_sched.csv")
-    lmax = CSV.read(timeseries_file_lmax, DataFrame)
-    lmax.date = DateTime.(lmax.date, dateformat"yyyy-mm-dd HH:MM:SS")
-    timeseries_lmax = PISP.filterSortTimeseriesData(lmax, units, start_dt, end_dt, stor_data, "lmax", scenario, "ess_id", stor_data.id[:])
+    lmax = read_timeseries_file(timeseries_file_lmax)
+    timeseries_lmax = PISP.filterSortTimeseriesData(lmax, units, start_dt, end_dt, stor_data, "lmax", scenario, "id_ess", stor_data.id_ess[:])
     timeseries_lmax_ess_ids = parse.(Int, names(select(timeseries_lmax, Not(:date))))
 
     # Get the timeseries data of the storage capacities - ENERGY
     timeseries_file_emax = joinpath(timeseries_folder, "ESS_emax_sched.csv")
-    emax = CSV.read(timeseries_file_emax, DataFrame)
-    emax.date = DateTime.(emax.date, dateformat"yyyy-mm-dd HH:MM:SS")
-    timeseries_emax = PISP.filterSortTimeseriesData(emax, units, start_dt, end_dt, stor_data, "emax", scenario, "ess_id", stor_data.id[:])
+    emax = read_timeseries_file(timeseries_file_emax)
+    timeseries_emax = PISP.filterSortTimeseriesData(emax, units, start_dt, end_dt, stor_data, "emax", scenario, "id_ess", stor_data.id_ess[:])
     timeseries_emax_ess_ids = parse.(Int, names(select(timeseries_emax, Not(:date))))
 
     # =================================== Create PRAS Object ==================================================
@@ -113,29 +109,29 @@ function createStorages(storages_input_file, timeseries_folder, units, regions_s
 
         # Do for each unit of the storage
         for i in 1:row.n
-            stors_names[stor_index_counter] = "$(row.id)_" * string(i)
+            stors_names[stor_index_counter] = "$(row.id_ess)_" * string(i)
             stors_categories[stor_index_counter] = row.tech
 
             # lmax - charging capacity
-            if (row.id in timeseries_lmax_ess_ids)
+            if (row.id_ess in timeseries_lmax_ess_ids)
                 # If there is time-varying data available
-                stors_chargecap[stor_index_counter, :] = round.(Int, timeseries_lmax[!, "$(row.id)"])
+                stors_chargecap[stor_index_counter, :] = round.(Int, timeseries_lmax[!, "$(row.id_ess)"])
             else
                 stors_chargecap[stor_index_counter, :] = fill(round(Int, row[:lmax]), units.N)
             end
 
             # pmax - discharging capacity
-            if (row.id in timeseries_pmax_ess_ids)
+            if (row.id_ess in timeseries_pmax_ess_ids)
                 # If there is time-varying data available
-                stors_dischcap[stor_index_counter, :] = round.(Int, timeseries_pmax[!, "$(row.id)"])
+                stors_dischcap[stor_index_counter, :] = round.(Int, timeseries_pmax[!, "$(row.id_ess)"])
             else
                 stors_dischcap[stor_index_counter, :] = fill(round(Int, row[:pmax]), units.N)
             end
 
             # emax - energy storage capacity
-            if (row.id in timeseries_emax_ess_ids)
+            if (row.id_ess in timeseries_emax_ess_ids)
                 # If there is time-varying data available
-                stors_energycap[stor_index_counter, :] = round.(Int, timeseries_emax[!, "$(row.id)"])
+                stors_energycap[stor_index_counter, :] = round.(Int, timeseries_emax[!, "$(row.id_ess)"])
             else
                 stors_energycap[stor_index_counter, :] = fill(round(Int, row[:emax]), units.N)
             end
@@ -152,16 +148,16 @@ function createStorages(storages_input_file, timeseries_folder, units, regions_s
         end
 
         # Now adjust if the number of units is changing over time
-        if (row.id in timeseries_n_ess_ids)
+        if (row.id_ess in timeseries_n_ess_ids)
             # Check if the number of units changes over time
-            if (minimum(timeseries_n[!, "$(row.id)"]) < row.n)
-                println("Note: The number of units for storage id $(row.id) changes over time. Adjusting the availability accordingly.")
+            if (minimum(timeseries_n[!, "$(row.id_ess)"]) < row.n)
+                println("Note: The number of units for storage id_ess $(row.id_ess) changes over time. Adjusting the availability accordingly.")
                 # Now iterate through the different unique levels of n
-                unique_n = unique(timeseries_n[!, "$(row.id)"])
+                unique_n = unique(timeseries_n[!, "$(row.id_ess)"])
                 sort!(unique_n)
                 for un in unique_n
                     # Find all the timesteps when the number of units is equal to un
-                    timeseries_n_indices = findall(timeseries_n[!, "$(row.id)"] .== un)
+                    timeseries_n_indices = findall(timeseries_n[!, "$(row.id_ess)"] .== un)
                     # Set all the units that are not on at these time-steps to zero
                     stors_dischcap[stor_index_counter - row.n + un:stor_index_counter - 1, timeseries_n_indices] .*= 0
                     stors_chargecap[stor_index_counter - row.n + un:stor_index_counter - 1, timeseries_n_indices] .*= 0
@@ -176,7 +172,7 @@ function createStorages(storages_input_file, timeseries_folder, units, regions_s
         # If copperplate model is desired, all generators are in the same region
         stors_region_attribution = [1:nrow(stor_data)]
     else
-        all_bus_ids = vcat([fill(row.bus_id, row.n) for row in eachrow(stor_data)]...)
+        all_bus_ids = vcat([fill(row.id_bus, row.n) for row in eachrow(stor_data)]...)
         stors_region_attribution = get_unit_region_assignment(regions_selected, all_bus_ids)
     end
 

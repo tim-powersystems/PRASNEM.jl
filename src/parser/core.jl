@@ -4,7 +4,7 @@ include("./createGenerators.jl")
 include("./createStorages.jl")
 include("./createGenStorages.jl")
 include("./createLinesInterfaces.jl")
-include("./helperFunctions.jl") # this includes helper functions such as get_unit_region_assignment
+include("./utils.jl") # this includes helper functions such as get_unit_region_assignment
 
 
 function parse_to_pras_format(start_dt::DateTime, end_dt::DateTime, input_folder, output_folder,

@@ -15,8 +15,8 @@ function createLinesInterfaces(lines_input_file, timeseries_folder, units, regio
 
     # Filter the relevant lines (only if not empty)
     if regions_selected != []
-        filter!(row -> row.bus_a_id in regions_selected, line_data)
-        filter!(row -> row.bus_b_id in regions_selected, line_data)
+        filter!(row -> row.id_bus_from in regions_selected, line_data)
+        filter!(row -> row.id_bus_to in regions_selected, line_data)
     end
 
     # Filter the investment and active columns
@@ -28,8 +28,8 @@ function createLinesInterfaces(lines_input_file, timeseries_folder, units, regio
     filter!(row -> !(row[:tech] in gentech_excluded), line_data)
 
     # Sort by 'from' and 'to' columns (create helper columns first to sort by lowest to highest bus id!)
-    line_data[!, :lower_bus_id] = min.(line_data.bus_a_id, line_data.bus_b_id)
-    line_data[!, :higher_bus_id] = max.(line_data.bus_a_id, line_data.bus_b_id)
+    line_data[!, :lower_bus_id] = min.(line_data.id_bus_from, line_data.id_bus_to)
+    line_data[!, :higher_bus_id] = max.(line_data.id_bus_from, line_data.id_bus_to)
     sort!(line_data, [:lower_bus_id, :higher_bus_id])
 
     # For the line-interface assignment, create a new ID with the new sorting
@@ -53,15 +53,13 @@ function createLinesInterfaces(lines_input_file, timeseries_folder, units, regio
 
     # Get the timevarying data
     timeseries_tmax_file = joinpath(timeseries_folder, "line_tmax_sched.csv")
-    tmax = CSV.read(timeseries_tmax_file, DataFrame)
-    tmax.date = DateTime.(tmax.date, dateformat"yyyy-mm-dd HH:MM:SS")
-    timeseries_tmax = PISP.filterSortTimeseriesData(tmax, units, start_dt, end_dt, line_data, "tmax", scenario, "lin_id", line_data.id[:])
+    tmax = read_timeseries_file(timeseries_tmax_file)
+    timeseries_tmax = PISP.filterSortTimeseriesData(tmax, units, start_dt, end_dt, line_data, "tmax", scenario, "id_lin", line_data.id_lin[:])
     timeseries_tmax_lin_ids = parse.(Int, names(select(timeseries_tmax, Not(:date))))
 
     timeseries_tmin_file = joinpath(timeseries_folder, "line_tmin_sched.csv")
-    tmin = CSV.read(timeseries_tmin_file, DataFrame)
-    tmin.date = DateTime.(tmin.date, dateformat"yyyy-mm-dd HH:MM:SS")
-    timeseries_tmin = PISP.filterSortTimeseriesData(tmin, units, start_dt, end_dt, line_data, "tmin", scenario, "lin_id", line_data.id[:])
+    tmin = read_timeseries_file(timeseries_tmin_file)
+    timeseries_tmin = PISP.filterSortTimeseriesData(tmin, units, start_dt, end_dt, line_data, "tmin", scenario, "id_lin", line_data.id_lin[:])
     timeseries_tmin_lin_ids = parse.(Int, names(select(timeseries_tmin, Not(:date))))
 
     # Interpolate the line capacity to all the timesteps
@@ -87,49 +85,49 @@ function createLinesInterfaces(lines_input_file, timeseries_folder, units, regio
         # Go through each line 
         for i in 1:row.n
             # These are always the same - independent of direction
-            line_names[line_index_counter] = "$(row.id)_" * string(i)
+            line_names[line_index_counter] = "$(row.id_lin)_" * string(i)
             line_categories[line_index_counter] = row.tech
             line_failure_rate[line_index_counter, :] .= row.failure_rate
             line_repair_rate[line_index_counter, :] .= row.repair_rate
 
-            # Check if already in correct direction (from lower to higher bus id)
-            if row.lower_bus_id == row.bus_a_id
+            # Check if already in correct direction (from lower to higher bus id_lin)
+            if row.lower_bus_id == row.id_bus_from
                 # First the details of this line
-                line_bus_from_final[line_index_counter] = row.bus_a_id
-                line_bus_to_final[line_index_counter] = row.bus_b_id
+                line_bus_from_final[line_index_counter] = row.id_bus_from
+                line_bus_to_final[line_index_counter] = row.id_bus_to
 
                 # Then add the time-varying data
-                if (row.id in timeseries_tmax_lin_ids)
+                if (row.id_lin in timeseries_tmax_lin_ids)
                     # If there is time-varying data available
-                    cap_line_forward[line_index_counter, :] = round.(Int,timeseries_tmax[!, string(row.id)][:])
+                    cap_line_forward[line_index_counter, :] = round.(Int,timeseries_tmax[!, string(row.id_lin)][:])
                 else
                     cap_line_forward[line_index_counter, :] = fill(round(Int, row[:tmax]), units.N)
                 end
 
-                if (row.id in timeseries_tmin_lin_ids)
+                if (row.id_lin in timeseries_tmin_lin_ids)
                     # If there is time-varying data available
-                    cap_line_backward[line_index_counter, :] = round.(Int,timeseries_tmin[!, string(row.id)][:])
+                    cap_line_backward[line_index_counter, :] = round.(Int,timeseries_tmin[!, string(row.id_lin)][:])
                 else
                     cap_line_backward[line_index_counter, :] = fill(round(Int, row[:tmin]), units.N)
                 end
         
-            else # if lower_bus_id is bus_b_id
+            else # if lower_bus_id is id_bus_to
                 
                 # First the details of this line (now swapped!!)
-                line_bus_from_final[line_index_counter] = row.bus_b_id
-                line_bus_to_final[line_index_counter] = row.bus_a_id
+                line_bus_from_final[line_index_counter] = row.id_bus_to
+                line_bus_to_final[line_index_counter] = row.id_bus_from
 
                 # Then add the time-varying data (swap forward and backward)
-                if (row.id in timeseries_tmax_lin_ids)
+                if (row.id_lin in timeseries_tmax_lin_ids)
                     # If there is time-varying data available
-                    cap_line_backward[line_index_counter, :] = round.(Int,timeseries_tmax[!, string(row.id)][:])
+                    cap_line_backward[line_index_counter, :] = round.(Int,timeseries_tmax[!, string(row.id_lin)][:])
                 else
                     cap_line_backward[line_index_counter, :] = fill(round(Int, row[:tmax]), units.N)
                 end
 
-                if (row.id in timeseries_tmin_lin_ids)
+                if (row.id_lin in timeseries_tmin_lin_ids)
                     # If there is time-varying data available
-                    cap_line_forward[line_index_counter, :] = round.(Int,timeseries_tmin[!, string(row.id)][:])
+                    cap_line_forward[line_index_counter, :] = round.(Int,timeseries_tmin[!, string(row.id_lin)][:])
                 else
                     cap_line_forward[line_index_counter, :] = fill(round(Int, row[:tmin]), units.N)
                 end
@@ -143,8 +141,8 @@ function createLinesInterfaces(lines_input_file, timeseries_folder, units, regio
 
     # ========================== Interfaces ===============================
     # Now aggregate the lines to get the interfaces
-    line_details = DataFrame(id_ascending = 1:N_lines , idlong = line_names, bus_from = line_bus_from_final, bus_to = line_bus_to_final)
-    line_groups = groupby(line_details, [:bus_from, :bus_to])
+    line_details = DataFrame(id_ascending = 1:N_lines , idlong = line_names, id_bus_from = line_bus_from_final, id_bus_to = line_bus_to_final)
+    line_groups = groupby(line_details, [:id_bus_from, :id_bus_to])
 
     N_interfaces = length(line_groups)
     interface_bus_from = zeros(Int, N_interfaces)
@@ -152,9 +150,9 @@ function createLinesInterfaces(lines_input_file, timeseries_folder, units, regio
     interface_cap_forward = zeros(Int, N_interfaces, units.N)
     interface_cap_backward = zeros(Int, N_interfaces, units.N)
     for (i, group) in enumerate(line_groups)
-        #println("Creating interface between region $(first(group.bus_a_id)) and $(first(group.bus_b_id)) with $(nrow(group)) lines.")
-        interface_bus_from[i] = first(group.bus_from)
-        interface_bus_to[i] = first(group.bus_to)
+        #println("Creating interface between region $(first(group.id_bus_from)) and $(first(group.id_bus_to)) with $(nrow(group)) lines.")
+        interface_bus_from[i] = first(group.id_bus_from)
+        interface_bus_to[i] = first(group.id_bus_to)
         idx_lines = group.id_ascending
         interface_cap_forward[i, :] = sum(cap_line_forward[idx_lines, :], dims=1)
         interface_cap_backward[i, :] = sum(cap_line_backward[idx_lines, :], dims=1)
