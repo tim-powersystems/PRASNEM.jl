@@ -16,27 +16,6 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder, ou
     investment_filter=[0], # only include assets that are not selected for investment
     active_filter=[1] # only include active assets
     )
-
-    # ---- CHANGE INPUTS HERE ----
-
-    #scenario = 2  # 1 is progressive change, 2 is step change, 3 is green hydrogen exports
-    #regions_selected = collect(1:12) # can select a subset or set to empty for copperplate [], note to select regions in ascending order!
-    
-    # Select generator technologies to exclude (to do studies with selected generators off)
-    #gentech_excluded = [] # can exclude a subset or set to empty for all [] - works for fuel, tech or both
-    #alias_excluded = [] # can select a subset or set to empty for all []
-    #investment_filter = [0] # only include assets that are not selected for investment 
-    #active_filter = [1] # only include active assets
-
-    # Only dates in data are FY25-26, FY30-31, FY35-36, FY40-41 and FY50-51
-    #start_date = "2025-01-07 00:00:00" #change as needed
-    #end_date = "2025-01-13 23:00:00" #change as needed
-    #folder_name_timeseries = "schedule-1w" # change as needed
-    #hydro_year = "Average" # Hydro reference year can be a year (as string) or "Average"
-
-    # Find timestep count
-    #start_dt = DateTime(start_date, dateformat"yyyy-mm-dd HH:MM:SS")
-    #end_dt = DateTime(end_date, dateformat"yyyy-mm-dd HH:MM:SS")
     
     timezone = tz"Australia/Sydney"
     timestep_count = Int(round((Dates.value(end_dt - start_dt) / (60*60*1000)) + 1)) # Dates.value returns ms

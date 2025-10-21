@@ -49,7 +49,7 @@ Or if just PRAS should be used:
 ```Julia
 using PRAS
 
-file_name = "src/sample_data/pras_files/2025-01-07_to_2025-01-13_s2_123456789101112_regions_nem.pras"
+file_name = "src/sample_data/pras_files/2025-01-07_to_2025-01-13_s2_123456789101112_regions.pras"
 sys = SystemModel(file_name)
 sf, = assess(sys, SequentialMonteCarlo(samples=100), Shortfall())
 

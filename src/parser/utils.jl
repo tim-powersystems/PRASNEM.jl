@@ -41,7 +41,7 @@ function read_timeseries_file(file_path::String)
         end
         return timeseries_data
     else
-        # If the file does not exist, return an empty DataFrame
+        # If the file does not exist, return an error
         error("The timeseries file $file_path does not exist.")
     end
 end
