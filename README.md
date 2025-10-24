@@ -13,9 +13,16 @@ This repository contains:
 
 ## Getting Started
 
-Develop the package PRASNEM by running
+Install the dependency [`PISP.jl`](https://github.com/ARPST-UniMelb/PISP.jl#),
+
+```julia
+using Pkg
+Pkg.develop(path="../PISP.jl")
+```
+
+then develop the package PRASNEM by running
 ```Julia
-using Pkg; Pkg.develop("./PRASNEM")
+using Pkg; Pkg.develop(path="./PRASNEM")
 ```
 
 #### Creating a new PRAS case file

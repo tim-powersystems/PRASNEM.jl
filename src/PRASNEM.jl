@@ -5,8 +5,7 @@ using CSV
 using Dates
 using DataFrames
 import Base.Threads
-
-using Pkg; Pkg.develop(url="../PISP.jl"); using PISP
+using PISP
 
 # Include the parser files
 include("./parser/core.jl")
