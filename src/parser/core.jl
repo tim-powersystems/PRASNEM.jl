@@ -4,6 +4,7 @@ include("./createGenerators.jl")
 include("./createStorages.jl")
 include("./createGenStorages.jl")
 include("./createLinesInterfaces.jl")
+include("./createDemandResponses.jl")
 include("./utils.jl") # this includes helper functions such as get_unit_region_assignment
 
 
@@ -52,6 +53,7 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder, ou
     generator_input_filename = "Generator.csv"
     storages_input_filename = "ESS.csv"
     lines_input_filename = "Line.csv"
+    demandresponses_input_filename = "DER.csv"
     
     # Create output filename
     output_name = string(Date(start_dt), "_to_", Date(end_dt), "_s", scenario, "_")
@@ -81,6 +83,7 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder, ou
     timeseries_folder = joinpath(input_folder, timeseries_folder)
     storages_input_file = joinpath(input_folder, storages_input_filename)
     lines_input_file = joinpath(input_folder, lines_input_filename)
+    demandresponses_input_file = joinpath(input_folder, demandresponses_input_filename)
     output_filepath = joinpath(output_folder, output_filename)
 
 
@@ -101,10 +104,12 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder, ou
     genstors, genstors_region_attribution = createGenStorages(storages_input_file, generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, 
         default_hydro_values=default_hydro_values)
+    demandresponses, dr_region_attribution = createDemandResponses(demandresponses_input_file, demand_input_file,timeseries_folder, units, regions_selected, start_dt, end_dt; 
+        scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter)
 
     if length(regions_selected) <= 1
         # If copperplate model is desired
-        sys = SystemModel(gens, stors, genstors, ZonedDateTime(start_dt, timezone):units.T(units.L):ZonedDateTime(end_dt, timezone), regions.load[1, :])
+        sys = SystemModel(gens, stors, genstors, demandresponses, ZonedDateTime(start_dt, timezone):units.T(units.L):ZonedDateTime(end_dt, timezone), regions.load[1, :])
     else 
         # Else, get the lines and interfaces for the relevant regions
         lines, interfaces, line_interface_attribution = createLinesInterfaces(lines_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
@@ -116,6 +121,7 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder, ou
                     gens, gen_region_attribution, 
                     stors, stors_region_attribution,
                     genstors, genstors_region_attribution,
+                    demandresponses, dr_region_attribution,
                     lines, line_interface_attribution,
                     ZonedDateTime(start_dt, timezone):units.T(units.L):ZonedDateTime(end_dt, timezone) # Timestamps
                     )
