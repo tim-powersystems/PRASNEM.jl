@@ -50,6 +50,7 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder, ou
     #output_folder = joinpath(current_working_directory, "src", "sample_data", "pras_files")
 
     # Define input and output file names (CAN CHANGE AS NEEDED, JUST ENSURE THEY ARE THE SAME FORMAT)
+    demand_input_filename = "Demand.csv"
     generator_input_filename = "Generator.csv"
     storages_input_filename = "ESS.csv"
     lines_input_filename = "Line.csv"
@@ -79,6 +80,7 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder, ou
     output_filename = string(output_name, ".pras")
 
     # Define input and output full file paths
+    demand_input_file = joinpath(input_folder, demand_input_filename)
     generators_input_file = joinpath(input_folder, generator_input_filename)
     timeseries_folder = joinpath(input_folder, timeseries_folder)
     storages_input_file = joinpath(input_folder, storages_input_filename)
@@ -96,7 +98,7 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder, ou
     println("Excluded aliases: ", if isempty(alias_excluded) "None" else alias_excluded end)
     println("Input folder: ", timeseries_folder)
 
-    regions = createRegions(timeseries_folder, units, regions_selected, scenario, start_dt, end_dt)
+    regions = createRegions(demand_input_file, timeseries_folder, units, regions_selected, scenario, start_dt, end_dt)
     gens, gen_region_attribution = createGenerators(generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter)
     stors, stors_region_attribution = createStorages(storages_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
@@ -104,7 +106,7 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder, ou
     genstors, genstors_region_attribution = createGenStorages(storages_input_file, generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, 
         default_hydro_values=default_hydro_values)
-    demandresponses, dr_region_attribution = createDemandResponses(demandresponses_input_file, demand_input_file,timeseries_folder, units, regions_selected, start_dt, end_dt; 
+    demandresponses, dr_region_attribution = createDemandResponses(demandresponses_input_file, demand_input_filename, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter)
 
     if length(regions_selected) <= 1

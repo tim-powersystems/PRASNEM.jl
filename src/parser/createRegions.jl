@@ -1,10 +1,20 @@
-function createRegions(timeseries_folder, units, region_names::Union{Vector{Int}, Vector{Any},UnitRange{Int64}}=[], scenario::Int=2, start_dt::Union{Nothing, DateTime}=nothing, end_dt::Union{Nothing, DateTime}=nothing)
+function createRegions(demand_input_file, timeseries_folder, units, region_names::Union{Vector{Int}, Vector{Any},UnitRange{Int64}}=[], scenario::Int=2, start_dt::Union{Nothing, DateTime}=nothing, end_dt::Union{Nothing, DateTime}=nothing)
 
+    # First, get the region names and demand ids
+    dem_info = CSV.read(demand_input_file, DataFrame)
+
+    # Filter only the demand in the selected regions
+    if region_names != []
+        filter!(row -> row[:id_bus] in region_names, dem_info)
+    end
+
+    # Exclude all the DSP objects - they are included as demandresponse objects
+    filter!(row -> !occursin("DSP", row[:name]), dem_info)
 
     # Read and filter the timestep load file
     load_input_file = joinpath(timeseries_folder, "Demand_load_sched.csv")
     load_data = read_timeseries_file(load_input_file)
-    df_filtered = PISP.filterSortTimeseriesData(load_data, units, start_dt, end_dt, DataFrame(), "", scenario, "id_dem", collect(region_names))
+    df_filtered = PISP.filterSortTimeseriesData(load_data, units, start_dt, end_dt, dem_info, "", scenario, "id_dem", dem_info.id_dem[:])
 
     number_of_regions = length(region_names)
 
@@ -30,14 +40,12 @@ function createRegions(timeseries_folder, units, region_names::Union{Vector{Int}
 
         demand_values_rounded = zeros(Int, number_of_regions, units.N)
         for (i, region) in enumerate(region_names)
-            if length(df_filtered[!, "$region"]) < units.N
-                println("WARNING: Fewer timesteps in the load data than expected for region: ", region)
-                println(df_filtered[!, "$region"])
-            end
-
-            demand_values_rounded[i, :] = round.(Int, df_filtered[!, "$region"])
+            
+            # Find all the demand that is in this region
+            dem_ids_in_region = dem_info.id_dem[findall(dem_info.id_bus .== region)]
+            # Sum up the demand for all the demand ids in this region
+            demand_values_rounded[i, :] = round.(Int, sum.(eachrow(df_filtered[!, string.(dem_ids_in_region)])))
         end
-
 
         return Regions{units.N,units.P}( #timesteps, units
             string.(region_names), # Names

@@ -48,7 +48,7 @@ PRASNEM.run_pras_study(sys, 100)
 Example if reading system from file:
 ```Julia
 using PRASNEM
-file_name = "src/sample_data/pras_files/2025-01-07_to_2025-01-13_s2_123456789101112_regions_nem.pras"
+file_name = "src/sample_data/pras_files/2025-01-07_to_2025-01-13_s2_123456789101112_regions.pras"
 PRASNEM.run_pras_study(file_name, 100)
 ```
 
