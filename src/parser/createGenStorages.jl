@@ -25,10 +25,17 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
     # =====================================================
     # Now read in the time-varying data for the genstor objects
     
-    # Inflow data
+    # Inflow data (optional)
     inflows_file = joinpath(timeseries_folder, "Generator_inflow_sched.csv")
-    timeseries_inflows = read_timeseries_file(inflows_file)
-    inflows_filtered = PISP.filterSortTimeseriesData(timeseries_inflows, units, start_dt, end_dt, DataFrame(), "", scenario, "id_gen", gen_data.id_gen[:])
+    if isfile(inflows_file)
+        #println("Inflow timeseries file found for hydro generators/storages.")
+        timeseries_inflows = read_timeseries_file(inflows_file)
+        inflows_filtered = PISP.filterSortTimeseriesData(timeseries_inflows, units, start_dt, end_dt, DataFrame(), "", scenario, "id_gen", gen_data.id_gen[:])
+    else
+        inflows_filtered = DataFrame()
+        println("WARNING: No inflow timeseries file found for hydro generators/storages. Using default static inflow values: ", default_hydro_values["default_static_inflow"]*100, " % of injection capacity for all hydro generators-storages.")
+    end
+
 
     # Add here the timevarying data for the storages if available in the future
     # Currently, there is no time-varying data for the storages in the model
