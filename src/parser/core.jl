@@ -8,8 +8,8 @@ include("./createDemandResponses.jl")
 include("./utils.jl") # this includes helper functions such as get_unit_region_assignment
 
 
-function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder, output_folder,
-    timeseries_folder::String;
+function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder::String, timeseries_folder::String;
+    output_folder::String="",
     regions_selected=collect(1:12), # can select a subset or set to empty for copperplate []
     scenario::Int=2, # 1 is progressive change, 2 is step change, 3 is green hydrogen exports
     gentech_excluded=[], # can exclude a subset or set to empty for all []
@@ -36,7 +36,7 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder, ou
     default_hydro_values["run_of_river_carryover_efficiency"] = 1.0 # Irrelevant when discharge time is zero anyway
     default_hydro_values["reservoir_discharge_efficiency"] = 1.0
     default_hydro_values["reservoir_carryover_efficiency"] = 1.0
-    default_hydro_values["default_static_inflow"] = 0.0 # As a factor of the grid injection capacity (e.g. 0.5 means that the inflow is 50% of the grid injection capacity) - this mostly applies to PHSP
+    default_hydro_values["default_static_inflow"] = 0.1 # As a factor of the grid injection capacity (e.g. 0.5 means that the inflow is 50% of the grid injection capacity) - this mostly applies to PHSP
 
     
 
@@ -128,9 +128,12 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder, ou
                     ZonedDateTime(start_dt, timezone):units.T(units.L):ZonedDateTime(end_dt, timezone) # Timestamps
                     )
     end 
-
-    savemodel(sys, output_filepath)
-    println("PRAS file created at: ", output_filepath)
+    if !(output_folder == "")
+        savemodel(sys, output_filepath)
+        println("PRAS file created at: ", output_filepath)  
+    else
+        println("PRAS system successfully created.")
+    end
 
     return sys
 

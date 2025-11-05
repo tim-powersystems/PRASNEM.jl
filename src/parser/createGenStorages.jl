@@ -33,7 +33,7 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
         inflows_filtered = PISP.filterSortTimeseriesData(timeseries_inflows, units, start_dt, end_dt, DataFrame(), "", scenario, "id_gen", gen_data.id_gen[:])
     else
         inflows_filtered = DataFrame()
-        println("WARNING: No inflow timeseries file found for hydro generators/storages. Using default static inflow values: ", default_hydro_values["default_static_inflow"], " % of injection capacity for all hydro generators-storages.")
+        println("WARNING: No inflow timeseries file found for hydro generators/storages. Using default static inflow values: ", default_hydro_values["default_static_inflow"]*100, " % of injection capacity for all hydro generators-storages.")
     end
 
 
