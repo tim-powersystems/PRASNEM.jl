@@ -15,7 +15,8 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder::St
     gentech_excluded=[], # can exclude a subset or set to empty for all []
     alias_excluded=[], # can select a subset or set to empty for all []
     investment_filter=[0], # only include assets that are not selected for investment
-    active_filter=[1] # only include active assets
+    active_filter=[1], # only include active assets
+    line_alias_included=[] # can include specific lines to be included even if they would be filtered out due to investment/active status
     )
     
     timezone = tz"Australia/Sydney"
@@ -36,7 +37,7 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder::St
     default_hydro_values["run_of_river_carryover_efficiency"] = 1.0 # Irrelevant when discharge time is zero anyway
     default_hydro_values["reservoir_discharge_efficiency"] = 1.0
     default_hydro_values["reservoir_carryover_efficiency"] = 1.0
-    default_hydro_values["default_static_inflow"] = 0.1 # As a factor of the grid injection capacity (e.g. 0.5 means that the inflow is 50% of the grid injection capacity) - this mostly applies to PHSP
+    default_hydro_values["default_static_inflow"] = 0.0 # As a factor of the grid injection capacity (e.g. 0.5 means that the inflow is 50% of the grid injection capacity) - this mostly applies to PHSP
 
     
 
@@ -77,6 +78,10 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder::St
         output_name *= join(alias_excluded, "_")
     end
 
+    if !isempty(line_alias_included) && !isempty(regions_selected)
+        output_name *= "_incl_" * join(line_alias_included, "_")
+    end
+
     output_filename = string(output_name, ".pras")
 
     # Define input and output full file paths
@@ -96,6 +101,7 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder::St
     println("Timeseries: ", start_dt,": ", units.T(units.L), " :", end_dt)
     println("Excluded tech/fuel: ", if isempty(gentech_excluded) "None" else gentech_excluded end)
     println("Excluded aliases: ", if isempty(alias_excluded) "None" else alias_excluded end)
+    println("Additional lines included: ", if isempty(line_alias_included) "None" else line_alias_included end)
     println("Input folder: ", timeseries_folder)
 
     regions = createRegions(demand_input_file, timeseries_folder, units, regions_selected, scenario, start_dt, end_dt)
@@ -115,7 +121,7 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder::St
     else 
         # Else, get the lines and interfaces for the relevant regions
         lines, interfaces, line_interface_attribution = createLinesInterfaces(lines_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
-            scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter)
+            scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, line_alias_included=line_alias_included)
 
         # Create the system model
         sys = SystemModel(

@@ -1,5 +1,5 @@
 function createLinesInterfaces(lines_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
-    scenario=2, gentech_excluded=[], alias_excluded=[], investment_filter=[0], active_filter=[1])
+    scenario=2, gentech_excluded=[], alias_excluded=[], investment_filter=[0], active_filter=[1], line_alias_included=[])
     """
     Create line and interface data structures from the input lines file.
 
@@ -19,9 +19,18 @@ function createLinesInterfaces(lines_input_file, timeseries_folder, units, regio
         filter!(row -> row.id_bus_to in regions_selected, line_data)
     end
 
-    # Filter the investment and active columns
-    filter!(row -> row.investment in investment_filter, line_data)
-    filter!(row -> row.active in active_filter, line_data)
+    if !isempty(line_alias_included)
+        # Check if all the specific lines to include exist between the selected regions
+        line_alias_not_found = setdiff(line_alias_included, line_data.alias)
+        if !isempty(line_alias_not_found)
+            println("WARNING: Couldn't find lines $line_alias_not_found between the selected regions! Check for spelling and/or region selection.")
+        end
+        # Include specific lines even if they would be filtered out
+        filter!(row -> (row.alias in line_alias_included) || (row.investment in investment_filter && row.active in active_filter), line_data)
+    else
+        # Just apply the normal filters
+        filter!(row -> (row.investment in investment_filter && row.active in active_filter), line_data)
+    end
 
     # Exclude gentech or alias if provided
     filter!(row -> !(row[:alias] in alias_excluded), line_data)
