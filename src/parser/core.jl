@@ -174,7 +174,7 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder::St
     """
     See `create_pras_system` for details.
     """
-    sys = create_pras_system(start_dt, end_dt, input_folder, timeseries_folder;
+    return create_pras_system(start_dt, end_dt, input_folder, timeseries_folder;
         output_folder=output_folder,
         regions_selected=regions_selected,
         scenario=scenario,
@@ -183,5 +183,5 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder::St
         investment_filter=investment_filter,
         active_filter=active_filter,
         line_alias_included=line_alias_included)
-    return sys
+    
 end
