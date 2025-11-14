@@ -10,13 +10,13 @@ include("./utils.jl") # this includes helper functions such as get_unit_region_a
 
 function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::String, timeseries_folder::String;
     output_folder::String="",
-    regions_selected=collect(1:12), # can select a subset or set to empty for copperplate []
+    regions_selected::Union{Vector{Any}, Vector{Int}}=collect(1:12), # can select a subset or set to empty for copperplate []
     scenario::Int=2, # 1 is progressive change, 2 is step change, 3 is green hydrogen exports
-    gentech_excluded=[], # can exclude a subset or set to empty for all []
-    alias_excluded=[], # can select a subset or set to empty for all []
-    investment_filter=[0], # only include assets that are not selected for investment
-    active_filter=[1], # only include active assets
-    line_alias_included=[] # can include specific lines to be included even if they would be filtered out due to investment/active status
+    gentech_excluded::Union{Vector{Any}, Vector{String}}=[], # can exclude a subset or set to empty for all []
+    alias_excluded::Union{Vector{Any}, Vector{String}}=[], # can select a subset or set to empty for all []
+    investment_filter::Union{Vector{Any}, Vector{Int}}=[0], # only include assets that are not selected for investment
+    active_filter::Union{Vector{Any}, Vector{Int}}=[1], # only include active assets
+    line_alias_included::Union{Vector{Any}, Vector{String}}=[] # can include specific lines to be included even if they would be filtered out due to investment/active status
     )
     """
     Create a PRAS file from NEM12 input data.
@@ -32,6 +32,8 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     - line_alias_included (default=[]): Array of line aliases to include even if they would be filtered out due to investment/active status.
 
     """
+    # Run function to check if optional parameters are valid
+    check_optional_parameters(regions_selected)
     
     timezone = tz"Australia/Sydney"
     timestep_count = Int(round((Dates.value(end_dt - start_dt) / (60*60*1000)) + 1)) # Dates.value returns ms
@@ -183,5 +185,4 @@ function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder::St
         investment_filter=investment_filter,
         active_filter=active_filter,
         line_alias_included=line_alias_included)
-    
 end

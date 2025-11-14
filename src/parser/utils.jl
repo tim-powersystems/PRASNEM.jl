@@ -45,3 +45,22 @@ function read_timeseries_file(file_path::String)
         error("The timeseries file $file_path does not exist.")
     end
 end
+
+# ====================================================
+function check_optional_parameters(regions_selected)
+    """
+    Function to check if optional parameters provided are valid.
+    """
+    # Check if regions_selected is not empty
+    if !isempty(regions_selected)
+        # Check if regions_selected contains only integers
+        if !all(x -> x isa Int, regions_selected)
+            error("regions_selected must be an array of integers.")
+        end
+        # Check the regions_selected values are in ascending order
+        if !issorted(regions_selected)
+            error("regions_selected must be in ascending order.")
+        end
+    end
+
+end

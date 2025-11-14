@@ -32,9 +32,22 @@ function createLinesInterfaces(lines_input_file, timeseries_folder, units, regio
         filter!(row -> (row.investment in investment_filter && row.active in active_filter), line_data)
     end
 
-    # Exclude gentech or alias if provided
+    # Exclude gentech or alias if provided and relevant
     filter!(row -> !(row[:alias] in alias_excluded), line_data)
     filter!(row -> !(row[:tech] in gentech_excluded), line_data)
+
+    # Now, we need to update the bus_ids in the lines to match the PRAS region IDs (which might be different from the original bus IDs if less regions are selected)
+    bus_id_mapping = Dict{Int, Int}()
+    for i in eachindex(regions_selected)
+        original_id = regions_selected[i]
+        bus_id_mapping[original_id] = i
+    end
+
+    # Update the bus ids in the line data
+    line_data.id_bus_from_original = copy(line_data.id_bus_from) # keep original for reference
+    line_data.id_bus_to_original = copy(line_data.id_bus_to)     # keep original for reference
+    line_data.id_bus_from = [bus_id_mapping[id] for id in line_data.id_bus_from]
+    line_data.id_bus_to = [bus_id_mapping[id] for id in line_data.id_bus_to]
 
     # Sort by 'from' and 'to' columns (create helper columns first to sort by lowest to highest bus id!)
     line_data[!, :lower_bus_id] = min.(line_data.id_bus_from, line_data.id_bus_to)
