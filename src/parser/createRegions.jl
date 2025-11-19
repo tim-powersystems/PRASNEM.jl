@@ -34,6 +34,10 @@ function createRegions(demand_input_file, timeseries_folder, units,
         df_filtered = update_with_weather_year(df_filtered, df_filtered_weather; timeseries_name="Demand")
     end
 
+    if isempty(sum.(eachrow(select(df_filtered,Not("date")))))
+        error("No demand data found for the selected regions in the specified time period. Maybe you selected timeseries folder with different year than start_dt and end_dt?")
+    end
+
     number_of_regions = length(region_names)
     if number_of_regions == 0
 

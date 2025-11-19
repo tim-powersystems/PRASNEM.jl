@@ -143,10 +143,10 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
         # Set the inflow data and initial state of charge (via "initial soc" inflow - this should be changed a a later time)
         if string(row.id_gen) in names(inflows_gen_filtered)
             inflow_data[idx, :] = round.(Int, inflows_gen_filtered[!, string(row.id_gen)])
-            inflow_data[idx, 1] .+= round.(Int, default_hydro_values["reservoir_initial_soc"] * energycapacity_data[idx, 1])
+            inflow_data[idx, 1] += round.(Int, default_hydro_values["reservoir_initial_soc"] * energycapacity_data[idx, 1])
         elseif string(row.id_ess) in names(inflows_stor_filtered)
             inflow_data[idx, :] = round.(Int, inflows_stor_filtered[!, string(row.id_ess)])
-            inflow_data[idx, 1] .+= round.(Int, default_hydro_values["pumped_hydro_initial_soc"] * energycapacity_data[idx, 1])
+            inflow_data[idx, 1] += round.(Int, default_hydro_values["pumped_hydro_initial_soc"] * energycapacity_data[idx, 1])
         else
             inflow_data[idx, :] .= round.(Int, gridinjectioncapacity_data[idx, :] * default_hydro_values["default_static_inflow"])
         end
