@@ -41,8 +41,8 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
         - Demand response timeseries are read from there instead of the main timeseries folder (normalised to match max capacity target year).
     
     """
-    # Run function to check if optional parameters are valid
-    check_optional_parameters(regions_selected)
+    # Run function to check if parameters are valid
+    check_parameters(regions_selected, weather_folder, start_dt, end_dt)
     
     timezone = tz"Australia/Sydney"
     timestep_count = Int(round((Dates.value(end_dt - start_dt) / (60*60*1000)) + 1)) # Dates.value returns ms

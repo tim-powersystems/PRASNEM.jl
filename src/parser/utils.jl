@@ -47,10 +47,11 @@ function read_timeseries_file(file_path::String)
 end
 
 # ====================================================
-function check_optional_parameters(regions_selected)
+function check_parameters(regions_selected, weather_folder, start_dt, end_dt)
     """
     Function to check if optional parameters provided are valid.
     """
+    # ============= CHECKS DUE TO PRAS FUNCTIONALITY LIMITATIONS
     # Check if regions_selected is not empty
     if !isempty(regions_selected)
         # Check if regions_selected contains only integers
@@ -60,6 +61,15 @@ function check_optional_parameters(regions_selected)
         # Check the regions_selected values are in ascending order
         if !issorted(regions_selected)
             error("regions_selected must be in ascending order.")
+        end
+    end
+
+
+    # ============= CHECKS BECAUSE FUNCTIONALITY IS NOT IMPLEMENTED YET
+    # If weather_folder is specified, check if start_dt and end_dt are in the same year (else there would be problems for now)
+    if weather_folder != ""
+        if year(start_dt) != year(end_dt)
+            error("If weather_folder is specified, start_dt and end_dt must be in the same year.")
         end
     end
 
