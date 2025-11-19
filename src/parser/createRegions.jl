@@ -25,7 +25,7 @@ function createRegions(demand_input_file, timeseries_folder, units,
     if weather_folder != ""
         load_input_file_weather = joinpath(weather_folder, "Demand_load_sched.csv")
         load_data_weather = read_timeseries_file(load_input_file_weather)
-        load_data_weather = update_dates(load_data_weather, year(load_data.date[1])) # To match the year of the main timeseries and adjust for leap years
+        load_data_weather = update_dates(load_data_weather, year(start_dt)) # To match the year of the main timeseries and adjust for leap years
         if length(load_data_weather.date) != length(load_data.date)
             error("The load data in the weather folder has a different number of timesteps than the main timeseries folder ($(length(load_data_weather.date)) vs $(length(load_data.date))).")
         end

@@ -57,7 +57,9 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     # Hydro default parameters
     default_hydro_values = Dict{String, Any}()
     default_hydro_values["run_of_river_discharge_time"] = 0 # This is the amount of timesteps that the run-of-river can discharge at full capacity (e.g. 0 = no storage)
-    default_hydro_values["reservoir_discharge_time"] = 24 * 30 # This is the amount of timesteps that the reservoir can discharge at full capacity (e.g. 24*30 = 30 days at hourly resolution)
+    default_hydro_values["reservoir_discharge_time"] = 200 # This is the amount of timesteps that the reservoir can discharge at full capacity. A rough estimate of the tasmanian system is 200 hours = ~8 days of full discharge
+    default_hydro_values["reservoir_initial_soc"] = 0.5 # As a factor of the maximum energy capacity (e.g. 0.5 means 50% initial SOC)
+    default_hydro_values["pumped_hydro_initial_soc"] = 0.5 # As a factor of the maximum energy capacity (e.g. 0.5 means 50% initial SOC)
     default_hydro_values["run_of_river_discharge_efficiency"] = 1.0
     default_hydro_values["run_of_river_carryover_efficiency"] = 1.0 # Irrelevant when discharge time is zero anyway
     default_hydro_values["reservoir_discharge_efficiency"] = 1.0
@@ -175,7 +177,7 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
                     lines, line_interface_attribution,
                     ZonedDateTime(start_dt, timezone):units.T(units.L):ZonedDateTime(end_dt, timezone) # Timestamps
                     )
-    end 
+    end
     if !(output_folder == "")
         savemodel(sys, output_filepath)
         println("PRAS file created at: ", output_filepath)  
@@ -188,7 +190,7 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
 
 end
 
-# Add former name for ease of use
+# Add former name for backcompatibility
 function create_pras_file(start_dt::DateTime, end_dt::DateTime, input_folder::String, timeseries_folder::String;
     output_folder::String="",
     regions_selected=collect(1:12), # can select a subset or set to empty for copperplate []

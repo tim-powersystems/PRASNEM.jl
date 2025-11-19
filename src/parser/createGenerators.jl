@@ -75,7 +75,7 @@ function createGenerators(generators_input_file, timeseries_folder, units, regio
         update_gentech_with_weather_year_ids = [row[:id_gen] for row in eachrow(gen_info) if row[:fuel] in update_gentech_with_weather_year]
         filter(row -> row[:id_gen] in update_gentech_with_weather_year_ids, pmax_weather)
         
-        pmax_weather = update_dates(pmax_weather, year(pmax.date[1])) # To match the year of the main timeseries and adjust for leap years
+        pmax_weather = update_dates(pmax_weather, year(start_dt)) # To match the year of the main timeseries and adjust for leap years
         df_filtered_weather = PISP.filterSortTimeseriesData(pmax_weather, units, start_dt, end_dt, gen_info, "pmax", scenario, "id_gen", gen_info.id_gen[:])
 
         timeseries_pmax = update_with_weather_year(timeseries_pmax, df_filtered_weather; timeseries_name="Generator Pmax")

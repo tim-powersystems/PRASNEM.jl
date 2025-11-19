@@ -6,11 +6,11 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
 
 
     # Now use the functions to get hydro generators from the generator and the storages data
-    gens, gen_region_attribution = createGenerators(generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
+    gens,  = createGenerators(generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, 
         investment_filter=investment_filter, active_filter=active_filter, get_only_hydro=true)
 
-    stors, stors_region_attribution = createStorages(storages_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt;
+    stors,  = createStorages(storages_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt;
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, 
         investment_filter=investment_filter, active_filter=active_filter, get_only_hydro=true)
 
@@ -140,19 +140,20 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
             repairprobability_data[idx, :] .= gens.μ[idx_gens, :]
         end
 
-        # Set the inflow data
+        # Set the inflow data and initial state of charge (via "initial soc" inflow - this should be changed a a later time)
         if string(row.id_gen) in names(inflows_gen_filtered)
             inflow_data[idx, :] = round.(Int, inflows_gen_filtered[!, string(row.id_gen)])
+            inflow_data[idx, 1] .+= round.(Int, default_hydro_values["reservoir_initial_soc"] * energycapacity_data[idx, 1])
         elseif string(row.id_ess) in names(inflows_stor_filtered)
             inflow_data[idx, :] = round.(Int, inflows_stor_filtered[!, string(row.id_ess)])
+            inflow_data[idx, 1] .+= round.(Int, default_hydro_values["pumped_hydro_initial_soc"] * energycapacity_data[idx, 1])
         else
             inflow_data[idx, :] .= round.(Int, gridinjectioncapacity_data[idx, :] * default_hydro_values["default_static_inflow"])
         end
 
-        # For all objects: Set the charging capacity as grid withdrawal + inflows for each timestep (to always allow for the inflows) - this charge capacity doesnt matter too much
+        # For all objects: Set the charging capacity as grid withdrawal + inflows for each timestep (to always allow for the inflows)
         chargecapacity_data[idx, :] .= gridwithdrawalcapacity_data[idx, :] .+ inflow_data[idx, :]
         dischargecapacity_data[idx, :] .= gridinjectioncapacity_data[idx, :]
-
     end
 
 

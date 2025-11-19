@@ -89,7 +89,7 @@ function update_dates(df, year::Int)
         # Add Feb 29 as the same as Feb 28
         feb28_rows = filter(row -> month(row.date) == 2 && day(row.date) == 28, df)
         feb29_rows = deepcopy(feb28_rows)
-        feb29_rows.date .= DateTime(year, 2, 29, hour.(feb28_rows.date), minute.(feb28_rows.date), second.(feb28_rows.date))
+        feb29_rows.date .= DateTime.(year, 2, 29, hour.(feb28_rows.date), minute.(feb28_rows.date), second.(feb28_rows.date))
         df = vcat(df, feb29_rows)
         sort!(df, :date)
     end
