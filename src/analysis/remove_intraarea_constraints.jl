@@ -18,8 +18,8 @@ function remove_intraarea_constraints(sys; bus_file_path::String="../sample_data
                 for k in 1:length(sys.interfaces.regions_from)
                     if (sys.interfaces.regions_from[k] == bus_i && sys.interfaces.regions_to[k] == bus_j) || (sys.interfaces.regions_from[k] == bus_j && sys.interfaces.regions_to[k] == bus_i)
                         # Increase the limits of the interfaces
-                        sys.interfaces.limit_backward[k] = high_limit
-                        sys.interfaces.limit_forward[k] = high_limit
+                        sys.interfaces.limit_backward[k,:] .= high_limit
+                        sys.interfaces.limit_forward[k,:] .= high_limit
                         # And of the lines
                         line_idxs = sys.interface_line_idxs[k]
                         sys.lines.backward_capacity[line_idxs,:] .= high_limit
