@@ -85,6 +85,14 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     storages_input_filename = "ESS.csv"
     lines_input_filename = "Line.csv"
     demandresponses_input_filename = "DER.csv"
+
+    # Define input and output full file paths
+    demand_input_file = joinpath(input_folder, demand_input_filename)
+    generators_input_file = joinpath(input_folder, generator_input_filename)
+    timeseries_folder = joinpath(input_folder, timeseries_folder)
+    storages_input_file = joinpath(input_folder, storages_input_filename)
+    lines_input_file = joinpath(input_folder, lines_input_filename)
+    demandresponses_input_file = joinpath(input_folder, demandresponses_input_filename)
     
     # Create output filename
     output_name = string(Date(start_dt), "_to_", Date(end_dt), "_s", scenario, "_")
@@ -110,7 +118,10 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     end
 
     if !isempty(line_alias_included) && !isempty(regions_selected)
-        output_name *= "_incl_" * join(line_alias_included, "_")
+        lines = CSV.read(lines_input_file, DataFrame)
+        line_ids = [lines.id_lin[findfirst(==(alias), lines.alias)] for alias in line_alias_included]
+        sort!(line_ids)
+        output_name *= "_incl_line_" * join(line_ids, "_")
     end
 
     if !isempty(weather_folder)
@@ -119,13 +130,7 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
 
     output_filename = string(output_name, ".pras")
 
-    # Define input and output full file paths
-    demand_input_file = joinpath(input_folder, demand_input_filename)
-    generators_input_file = joinpath(input_folder, generator_input_filename)
-    timeseries_folder = joinpath(input_folder, timeseries_folder)
-    storages_input_file = joinpath(input_folder, storages_input_filename)
-    lines_input_file = joinpath(input_folder, lines_input_filename)
-    demandresponses_input_file = joinpath(input_folder, demandresponses_input_filename)
+
     output_filepath = joinpath(output_folder, output_filename)
 
     if !(output_folder == "") &&  ispath(output_filepath)
