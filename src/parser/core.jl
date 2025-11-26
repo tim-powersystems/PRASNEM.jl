@@ -136,7 +136,9 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     if !(output_folder == "") &&  ispath(output_filepath)
         println("Output file already exists: ", output_filepath)
         println("Loading file...")
-        return SystemModel(output_filepath)
+        sys = SystemModel(output_filepath)
+        sys.attrs["case"] = output_name # ensure case name is set
+        return sys
     end
 
     # ---- CREATE PRAS FILE ----
@@ -166,7 +168,7 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
 
     if length(regions_selected) <= 1
         # If copperplate model is desired
-        sys = SystemModel(gens, stors, genstors, demandresponses, ZonedDateTime(start_dt, timezone):units.T(units.L):ZonedDateTime(end_dt, timezone), regions.load[1, :])
+        sys = SystemModel(gens, stors, genstors, demandresponses, ZonedDateTime(start_dt, timezone):units.T(units.L):ZonedDateTime(end_dt, timezone), regions.load[1, :], Dict("case"=>output_name) ) # save case name as attribute
     else 
         # Else, get the lines and interfaces for the relevant regions
         lines, interfaces, line_interface_attribution = createLinesInterfaces(lines_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
@@ -180,7 +182,8 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
                     genstors, genstors_region_attribution,
                     demandresponses, dr_region_attribution,
                     lines, line_interface_attribution,
-                    ZonedDateTime(start_dt, timezone):units.T(units.L):ZonedDateTime(end_dt, timezone) # Timestamps
+                    ZonedDateTime(start_dt, timezone):units.T(units.L):ZonedDateTime(end_dt, timezone), # Timestamps
+                    Dict("case"=>output_name) # save case name as attribute
                     )
     end
     if !(output_folder == "")
