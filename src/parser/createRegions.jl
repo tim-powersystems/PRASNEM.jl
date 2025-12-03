@@ -64,13 +64,17 @@ function createRegions(demand_input_file, timeseries_folder, units,
             
             # Find all the demand that is in this region
             dem_ids_in_region = dem_info.id_dem[findall(dem_info.id_bus .== region)]
-            # Sum up the demand for all the demand ids in this region
-            demand_values_rounded[i, :] = round.(Int, sum.(eachrow(df_filtered[!, string.(dem_ids_in_region)])))
+            if isempty(dem_ids_in_region)
+                println("Info: No demand found for region $(region). Setting demand to zero.")
+            else
+                # Sum up the demand for all the demand ids in this region
+                demand_values_rounded[i, :] = round.(Int, sum.(eachrow(df_filtered[!, string.(dem_ids_in_region)])))
+            end
         end
 
         return Regions{units.N,units.P}( #timesteps, units
             string.(region_names), # Names
-            reshape(demand_values_rounded, number_of_regions, units.N) # Load (in MW) for each region and timestep
+            demand_values_rounded # Load (in MW) for each region and timestep
             )
     end
 

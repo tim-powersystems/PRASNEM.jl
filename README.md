@@ -64,7 +64,7 @@ println(LOLE(sf))
 println(NEUE(sf))
 ```
 
-#### Optional parameters of PRASNEM.create_pras_system
+## Optional parameters of PRASNEM.create_pras_system
 There are multiple optional parameters that can be adjusted when creating the pras system:
 | Parameter           | Default       | Description                                                                                                                        |
 | ------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -78,9 +78,27 @@ There are multiple optional parameters that can be adjusted when creating the pr
 | line_alias_included | []            | Array of line aliases to include even if they would be filtered out due to investment/active status                                |
 | weather_folder      | ""            | Folder with weather data timeseries to use (no capacities are read from here, only normalised timeseries for demand, VRE, and DSP). Inflows are considered in full (not normalised).|
 
+## Tips for more efficient usage
 
-#### Further PRAS functions
-For reference, these are a number of possible outputs from PRAS:
+- **Using the optional parameter output_folder**:If you are using the same systems regularly, try to specify an ```output_folder```. If the PRAS-file is saved there, the function ```create_pras_system``` will automatically load this file instead of creating the same system again from scratch.
+- **Fixing the seed of PRAS runs**: While fixing the seed of a simulation in PRAS will ensure the same result for a given system, it might not result in the same samples for a system with different components. Therefore, the standard deviation which is also computed by PRAS is important to consider. If exactly the same outage samples are required, consider using the same system for both cases but just "disabling" the components by setting the capacities to zero. (More details see [PRAS github](https://github.com/NREL/PRAS/issues/37).)
+
+## Overview of PRASNEM.jl functions
+
+The core function of PRASNEM.jl is ```create_pras_system()```, as outlined above. Additionally, the following functions are provided in this package.
+
+|    Location     |              Function              |                                                                             Details                                                                             |
+| :-------------: | :--------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|  ```/parser```  |    **```create_pras_system```**    |                                Main function to parse data output from PISP into the PRAS format. See optional parameters above.                                |
+| ```/updating``` | ```remove_intraarea_constraints``` |                                 Function to increase all limits of lines/interfaces between the subnodes within an area/state.                                  |
+| ```/updating``` |       ```redistribute_DR```        | Distributes the demandresponse capabilities across the sub-nodes within each area according to a specified "mode" (default / equal / max demand / total energy) |
+| ```/analysis``` |          ```NEUE_area```           |                       Returns the normalised expected unserved energy (NEUE) for each area (sub-regional results are weighted by demand)                        |
+| ```/analysis``` |      ```get_event_details```       |                                        Returns event details (duration, sum, max) for a given (time-)vector of shortfall                                        |
+| ```/studies```  |        ```run_pras_study```        |                                               Runs a PRAS study and returns adequacy values, given a PRAS-system                                                |
+
+
+## Further PRAS functions
+For reference, these are a number of possible outputs from PRAS (full list can be found in the PRAS documentation [here](https://nrel.github.io/PRAS/stable/PRAS/results/)):
 ```Julia
 using PRAS
 
