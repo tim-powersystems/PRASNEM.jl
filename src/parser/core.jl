@@ -187,6 +187,9 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
                     )
     end
     if !(output_folder == "")
+        if !ispath(output_folder)
+            mkpath(output_folder)
+        end
         savemodel(sys, output_filepath)
         println("PRAS file created at: ", output_filepath)  
     else
