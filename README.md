@@ -11,21 +11,24 @@ This repository contains:
 - All the parser scripts to create a PRAS model from ISP data
 - Some PRAS model files, ready to go
 
+> [!CAUTION]
+> The current release is fully functional and has been extensively tested; however, bugs or other issues may still arise. We would greatly appreciate any feedback or bug reports submitted via https://github.com/ARPST-UniMelb/PRASNEM.jl/issues 
+
 ## Getting Started
 
-Install the dependency [`PISP.jl`](https://github.com/ARPST-UniMelb/PISP.jl#),
+Clone the repository by executing the following function
+```sh
+git clone "https://github.com/ARPST-UniMelb/PRASNEM.jl"
+```
 
+Then start a Julia REPL within the folder and activate and instantiate the local environment:
 ```julia
 using Pkg
-Pkg.develop(path="../PISP.jl")
+Pkg.activate(".")
+Pkg.instantiate()
 ```
 
-then develop the package PRASNEM by running
-```Julia
-using Pkg; Pkg.develop(path="./PRASNEM")
-```
-
-#### Creating a new PRAS case file
+Now you can create PRAS files using PRASNEM and data from [PISP.jl](https://github.com/ARPST-UniMelb/PISP.jl):
 Example:
 ```Julia
 using PRASNEM
@@ -81,7 +84,7 @@ There are multiple optional parameters that can be adjusted when creating the pr
 ## Tips for more efficient usage
 
 - **Using the optional parameter output_folder**:If you are using the same systems regularly, try to specify an ```output_folder```. If the PRAS-file is saved there, the function ```create_pras_system``` will automatically load this file instead of creating the same system again from scratch.
-- **Fixing the seed of PRAS runs**: While fixing the seed of a simulation in PRAS will ensure the same result for a given system, it might not result in the same samples for a system with different components. Therefore, the standard deviation which is also computed by PRAS is important to consider. If exactly the same outage samples are required, consider using the same system for both cases but just "disabling" the components by setting the capacities to zero. (More details see [PRAS github](https://github.com/NREL/PRAS/issues/37).)
+- **Fixing the seed of PRAS runs**: While fixing the seed of a simulation in PRAS will ensure the same result for a given system, it might not result in the same samples for a system with different components. Therefore, the standard deviation which is also computed by PRAS is important to consider. If exactly the same outage samples are required, consider using the same system for both cases but just "disabling" the studied components by setting the capacities to zero. (More details see [PRAS github](https://github.com/NREL/PRAS/issues/37).)
 
 ## Overview of PRASNEM.jl functions
 
