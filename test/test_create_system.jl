@@ -3,7 +3,7 @@ using PRASNEM
 using PRAS
 
 @testset "Create System Tests" begin
-    data_dir = "../data/nem12"
+    data_dir = "./src/sample_data/nem12"
     generator_input_file = joinpath(data_dir, "Generator.csv")
     timeseries_folder = joinpath(data_dir, "schedule-24h")
 
