@@ -134,7 +134,7 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     output_filepath = joinpath(output_folder, output_filename)
 
     if !(output_folder == "") &&  ispath(output_filepath)
-        info("Output file already exists: ", output_filepath)
+        @info("Output file already exists: $output_filepath")
         println("Loading file...")
         sys = SystemModel(output_filepath)
         sys.attrs["case"] = output_name # ensure case name is set
@@ -142,7 +142,7 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     end
 
     # ---- CREATE PRAS FILE ----
-    info("Creating PRAS file from input data...")
+    @info("Creating PRAS file from input data...")
     println("Scenario: ", scenario)
     println("Regions: ", if isempty(regions_selected) "All" else regions_selected end )
     println("Timeseries: ", start_dt,": ", units.T(units.L), " :", end_dt)
@@ -191,9 +191,9 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
             mkpath(output_folder)
         end
         savemodel(sys, output_filepath)
-        info("PRAS file created at: ", output_filepath)  
+        @info("PRAS file created at: $output_filepath")  
     else
-        info("PRAS system successfully created.")
+        @info("PRAS system successfully created.")
     end
 
     return sys
