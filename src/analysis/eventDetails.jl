@@ -39,10 +39,12 @@ function get_all_event_details(sfsamples; sesamples=nothing, sys=nothing)
             - start_index: Starting index of the event in the time series.
             - end_index: Ending index of the event in the time series.
     """
-    
-    df = DataFrame(length=Int[], sum=Int[], maximum=Int[], start_index=Int[], end_index=Int[], region=Int[], area=Int[], sample=Int[])
-    
-    if sesamples !== nothing
+    df = DataFrame(length=Int[], sum=Int[], maximum=Int[], start_index=Int[], end_index=Int[], region=Int[], area=Int[], sample=Int[], storages_energy_before=Float64[])
+
+    if isnothing(sesamples)
+        total_energy = zeros(Float64, 1, size(sfsamples.shortfall, 2), size(sfsamples.shortfall, 3))
+        total_energy .= NaN
+    else
         df.storages_energy_before = zeros(Float64, 0)
         total_energy = sum(sesamples.energy, dims=1)
         if sys === nothing
