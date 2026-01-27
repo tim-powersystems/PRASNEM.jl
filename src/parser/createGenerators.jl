@@ -83,7 +83,11 @@ function createGenerators(generators_input_file, timeseries_folder, units, regio
 
 
     # Convert the timeseries data into the PRAS format
-    Ngens = sum(gen_info.n)
+    if isempty(gen_info)
+        Ngens = 0
+    else
+        Ngens = sum(gen_info.n)
+    end
     gens_names = Vector{String}(undef, Ngens)
     gens_categories = Vector{String}(undef, Ngens)
     gens_cap = zeros(Int, Ngens, units.N)

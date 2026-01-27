@@ -44,7 +44,12 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     # Run function to check if parameters are valid
     check_parameters(regions_selected, weather_folder, start_dt, end_dt)
     
-    timezone = tz"Australia/Sydney"
+    # TimeZones only works until 2038 (see: https://juliatime.github.io/TimeZones.jl/stable/faq/) - therefore use UTC for dates beyond that
+    if end_dt > Date(2038)
+        timezone = tz"UTC"
+    else
+        timezone = tz"Australia/Sydney"
+    end
     timestep_count = Int(floor((Dates.value(end_dt - start_dt) / (60*60*1000)) + 1)) # Dates.value returns ms, round down to whole hours
 
     units = (N = timestep_count, # Number of timesteps
@@ -168,7 +173,10 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
 
     if length(regions_selected) <= 1
         # If copperplate model is desired
-        sys = SystemModel(gens, stors, genstors, demandresponses, ZonedDateTime(start_dt, timezone):units.T(units.L):ZonedDateTime(end_dt, timezone), regions.load[1, :], Dict("case"=>output_name) ) # save case name as attribute
+        sys = SystemModel(gens, stors, genstors, demandresponses, 
+        ZonedDateTime(start_dt, timezone):units.T(units.L):ZonedDateTime(end_dt, timezone), 
+        regions.load[1, :], 
+        Dict("case"=>output_name) ) # save case name as attribute
     else 
         # Else, get the lines and interfaces for the relevant regions
         lines, interfaces, line_interface_attribution = createLinesInterfaces(lines_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
