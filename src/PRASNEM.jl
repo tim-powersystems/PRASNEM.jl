@@ -13,10 +13,10 @@ include("./parser/core.jl")
 # Include customised functions to update PRAS models
 include("./updating/core.jl")
 
-# Include customised functions for running PRAS
-include("./studies/core.jl")
-
 # Include customised functions to analyse PRAS output
 include("./analysis/core.jl")
+
+# Include customised functions for running PRAS
+include("./studies/core.jl")
 
 end

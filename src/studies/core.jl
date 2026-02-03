@@ -1,3 +1,6 @@
+include("./assess_event_level_details.jl")
+
+
 function run_pras_study(sys_input; sample_number::Int=100)
     
     println("Using $(Threads.nthreads()) threads")
