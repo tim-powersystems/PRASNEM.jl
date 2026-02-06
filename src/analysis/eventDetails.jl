@@ -43,8 +43,14 @@ function find_start_of_critical_event(df_nostor::DataFrame, sample_number::Int, 
     condition_start_before_event = df_nostor.start_index .<= event_start_index
     condition_end_after_event = df_nostor.end_index .>= event_start_index
 
-    # Using the minimum in case there are multiple overlapping events
-    return minimum(df_nostor[findall(condition_same_sample .&& condition_start_before_event .&& condition_end_after_event), :start_index])
+    all_start_indices = df_nostor[findall(condition_same_sample .&& condition_start_before_event .&& condition_end_after_event), :start_index]
+    if isempty(all_start_indices)
+        # In case there is no critical event that overlaps with the start of the USE event, return 0 to indicate that there is no critical event in the df_nostor event.
+        return 0
+    else
+        # Using the minimum in case there are multiple overlapping events
+        return minimum(all_start_indices)
+    end
 end
 
 
@@ -154,7 +160,11 @@ function get_all_event_details(sfsamples; sesamples=nothing, sys=nothing, df_nos
                         total_energy_at_critical_index = NaN
                     else
                         start_critical_index = find_start_of_critical_event(df_nostor, i, event.start_index)
-                        total_energy_at_critical_index = total_energy[1,start_critical_index-1,i]
+                        if start_critical_index == 0
+                            total_energy_at_critical_index = NaN
+                        else
+                            total_energy_at_critical_index = total_energy[1,start_critical_index-1,i]
+                        end
                     end
                     push!(df, (event.length, event.sum, event.maximum, event.start_index, event.end_index, start_critical_index, r, region_area_map[r], i, total_energy[1,event.start_index-1,i], total_energy_at_critical_index))
                 end
