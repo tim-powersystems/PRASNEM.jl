@@ -6,3 +6,7 @@ include("remove_intraarea_constraints.jl")
 
 # Function to redistribute demand response across the states/areas
 include("redistribute_DR.jl")
+
+# Functions to update a PRAS model with storage operation
+include("updateStorageOperation.jl")
+
