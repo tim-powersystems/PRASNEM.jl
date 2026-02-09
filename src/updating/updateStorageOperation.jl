@@ -58,7 +58,9 @@ end
 """
     updateExpectationDispatch(sys, res; include_genstorage=true)
 
-Dispatch: Adjust load with expected storage / genstorage dispatch. Then disable the storage/genstors by setting their capacities to zero (not remove to allow consistency across seeds).
+Adjust load with expected storage / genstorage dispatch. 
+Then disable the storage/genstors by setting their capacities to zero (not remove to allow consistency across seeds).
+Additionally, demandresponse needs to be removed to avoid it charging storage. Therefore, a subsequent "reoptimisation" is needed to obtain the accurate adequacy results. 
 
 # Inputs
 - `sys`: The PRAS system model to be updated.
@@ -92,6 +94,9 @@ function updateExpectationDispatch(sys, res; include_genstorage=true)
         sys.generatorstorages.energy_capacity .= 0
         sys.generatorstorages.inflow .= 0
     end
+
+    # Disable demand response to avoid it charging storage
+    sys.demandresponses.borrow_capacity .= 0
     
     return sys
 end
