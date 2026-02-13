@@ -22,6 +22,7 @@ function createStorages(storages_input_file, timeseries_folder, units, regions_s
     # Filter the gentech and alias exclusions
     filter!(row -> !(row[:alias] in alias_excluded), stor_data)
     filter!(row -> !(row[:tech] in gentech_excluded), stor_data)
+    filter!(row -> !(row[:alias][1:3] in gentech_excluded), stor_data) # This is to catch any VPPs that are named like "VPP_xxx"
 
     # Filter the investment and active status
     filter!(row -> row[:investment] in investment_filter, stor_data)
