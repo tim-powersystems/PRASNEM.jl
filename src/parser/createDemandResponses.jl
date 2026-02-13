@@ -1,11 +1,22 @@
 function createDemandResponses(der_input_file, demand_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
-        scenario=2, gentech_excluded=[], alias_excluded=[], investment_filter=[false], active_filter=[true], weather_folder="")
+        scenario=2, gentech_excluded=[], alias_excluded=[], investment_filter=[false], active_filter=[true], weather_folder="", 
+        DER_parameters=Dict(
+            "DSP_flexibility"=>false, "DSP_payback_window"=>24, "DSP_interest"=>-1.0, "DSP_max_energy_factor"=>100.0,
+            "EV_charge_flexibility"=>false, "EV_payback_window"=>8, "EV_interest"=>0.0, "EV_max_energy_factor"=>100.0)
+        )
         """
         Assumptions taken for now (implicitly):
                 - n=1 for all drs (constant) - i.e. not read in from file
                 -
         """
 
+        # If DSP or EV flexibility is not included, add them to the list of technologies to be excluded
+        if !DER_parameters["EV_charge_flexibility"]
+            push!(gentech_excluded, "EV")
+        end
+        if !DER_parameters["DSP_flexibility"]
+            push!(gentech_excluded, "DSP")
+        end
 
         # Read in all the metadata of the DR and demand (to match to buses)
         dr_info = CSV.read(der_input_file, DataFrame)
@@ -50,16 +61,18 @@ function createDemandResponses(der_input_file, demand_input_file, timeseries_fol
         end
 
         # Create a "duration" column to artificially create a hierarchy between the dr_types
-        dr_info.duration = zeros(Int, nrow(dr_info))
+        dr_info.duration = fill(1, nrow(dr_info))
+        dr_info.payback_window = fill(2, nrow(dr_info)) # Default irrelevant
+        dr_info.energy_interest = fill(-1.0, nrow(dr_info)) # Default is -100% borrowed energy interest => Energy doesn't need to be paid back
         for i in 1:nrow(dr_info)
-            if dr_info.cost_red[i] == 7500.0
-                dr_info.duration[i] = 1  
-            elseif dr_info.cost_red[i] == 1000.0
-                dr_info.duration[i] = 2
-            elseif dr_info.cost_red[i] == 500.0
-                dr_info.duration[i] = 3
-        else
-                dr_info.duration[i] = 4
+            if dr_info.tech[i] == "EV"
+                dr_info.duration[i] = DER_parameters["EV_max_energy_factor"]
+                dr_info.payback_window[i] = DER_parameters["EV_payback_window"]
+                dr_info.energy_interest[i] = DER_parameters["EV_interest"]
+            elseif dr_info.tech[i] == "DSP"
+                dr_info.duration[i] = DER_parameters["DSP_max_energy_factor"]
+                dr_info.payback_window[i] = DER_parameters["DSP_payback_window"]
+                dr_info.energy_interest[i] = DER_parameters["DSP_interest"]
             end
         end
 
@@ -68,13 +81,17 @@ function createDemandResponses(der_input_file, demand_input_file, timeseries_fol
         dr_names = string.(dr_info.id_der)
         dr_types = Vector{String}(dr_info.tech[:])
         dr_borrow_power_capacity = zeros(Int, number_of_drs, units.N)
-        dr_load_energy_capacity = zeros(Int, number_of_drs, units.N)
+        dr_payback_power_capacity = zeros(Int, number_of_drs, units.N) 
+        dr_energy_capacity = zeros(Int, number_of_drs, units.N)
+        dr_energy_interest = fill(-1.0, number_of_drs, units.N)  # Default is -100% borrowed energy interest => Energy doesn't need to be paid back
         dr_payback_window = zeros(Int, number_of_drs, units.N)
         for i in 1:number_of_drs
             dr_id = dr_info.id_der[i]
             dr_borrow_power_capacity[i, :] = round.(Int, dr_timeseries[!, string(dr_id)])
-            dr_payback_window[i, :] .= round(Int, dr_info.duration[i])
-            dr_load_energy_capacity[i, :] .= 1000 #dr_borrow_power_capacity[i, :]  # Energy capacity = power capacity * duration (in hours)
+            dr_payback_power_capacity[i, :] .= dr_borrow_power_capacity[i, :] # Assuming the same power capacity for borrowing and payback for now
+            dr_payback_window[i, :] .= round.(Int, dr_info.payback_window[i])
+            dr_energy_capacity[i, :] .= round.(Int, dr_borrow_power_capacity[i, :] * dr_info.duration[i]) # Energy capacity = power capacity * duration (in hours)
+            dr_energy_interest[i, :] .= dr_info.energy_interest[i]
         end
 
         dr_region_attribution = get_unit_region_assignment(regions_selected, dr_info.id_bus[:])
@@ -83,10 +100,10 @@ function createDemandResponses(der_input_file, demand_input_file, timeseries_fol
                 dr_names,
                 dr_types,
                 dr_borrow_power_capacity,   # borrow power capacity
-                fill(0, number_of_drs, units.N),   # payback power capacity
-                dr_load_energy_capacity,  # load energy capacity
-                fill(-1.0, number_of_drs, units.N),  # -100% borrowed energy interest => Energy doesn't need to be paid back
-                dr_payback_window,    # 6 hour allowable payback time periods (irrelevant)
+                dr_payback_power_capacity,   # payback power capacity
+                dr_energy_capacity,  # load energy capacity
+                dr_energy_interest,  # energy interest rate (borrowed energy interest) - between -1.0 and 1.0
+                dr_payback_window,    # payback window in timesteps
                 fill(0.0, number_of_drs, units.N),  # 0% outage probability
                 fill(1.0, number_of_drs, units.N),  # 100% recovery probability
                 ), dr_region_attribution

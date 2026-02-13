@@ -17,7 +17,10 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     investment_filter::Union{Vector{Any}, Vector{Int}}=[0], # only include assets that are not selected for investment
     active_filter::Union{Vector{Any}, Vector{Int}}=[1], # only include active assets
     line_alias_included::Union{Vector{Any}, Vector{String}}=[], # can include specific lines to be included even if they would be filtered out due to investment/active status
-    weather_folder::String="" # Can specify a specific folder with the timeseries weather data that should be used (no capacities are read from here, just normalised timeseries)
+    weather_folder::String="", # Can specify a specific folder with the timeseries weather data that should be used (no capacities are read from here, just normalised timeseries)
+    DER_parameters=Dict(
+            "DSP_flexibility"=>false, "DSP_payback_window"=>24, "DSP_interest"=>-1.0, "DSP_max_energy_factor"=>100.0,
+            "EV_charge_flexibility"=>false, "EV_payback_window"=>8, "EV_interest"=>0.0, "EV_max_energy_factor"=>100.0) # Additional parameters for DER (e.g. whether to include EV flexibility or not)
     )
     """
     Create a PRAS file from NEM12 input data.
@@ -169,7 +172,7 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, 
         default_hydro_values=default_hydro_values, weather_folder=weather_folder)
     demandresponses, dr_region_attribution = createDemandResponses(demandresponses_input_file, demand_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
-        scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, weather_folder=weather_folder)
+        scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, weather_folder=weather_folder, DER_parameters=DER_parameters)
 
     if length(regions_selected) <= 1
         # If copperplate model is desired
