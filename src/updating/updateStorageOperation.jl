@@ -2,10 +2,8 @@
 
 # The following functions are available:
 #       - `updateEnergyDerating`: Derate short-term energy storage capacities based on a provided mapping (or AEMO mapping by default).
-
-
-
-
+#       - `updateStorageMarketDecisionDispatch`: Dispatch storage based on market decisions - charging only when expected to charge. Hoever, the amount still remains flexible.
+#       - `updateExpectationDispatch`: Adjust load with expected storage / genstorage dispatch. Then disable the storage/genstors by setting their capacities to zero (not remove to allow consistency across seeds). Additionally, demandresponse needs to be removed to avoid it charging storage. Therefore, a subsequent "reoptimisation" is needed to obtain the accurate adequacy results.
 
 
 

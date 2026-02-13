@@ -112,6 +112,9 @@ function createStorages(storages_input_file, timeseries_folder, units, regions_s
         for i in 1:row.n
             stors_names[stor_index_counter] = "$(row.id_ess)_" * string(i)
             stors_categories[stor_index_counter] = row.tech
+            if row.name[1:3] == "VPP"
+                stors_categories[stor_index_counter] = "VPP"
+            end
 
             # lmax - charging capacity
             if (row.id_ess in timeseries_lmax_ess_ids)

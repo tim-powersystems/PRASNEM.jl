@@ -20,7 +20,8 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     weather_folder::String="", # Can specify a specific folder with the timeseries weather data that should be used (no capacities are read from here, just normalised timeseries)
     DER_parameters=Dict(
             "DSP_flexibility"=>false, "DSP_payback_window"=>24, "DSP_interest"=>-1.0, "DSP_max_energy_factor"=>100.0,
-            "EV_charge_flexibility"=>false, "EV_payback_window"=>8, "EV_interest"=>0.0, "EV_max_energy_factor"=>100.0) # Additional parameters for DER (e.g. whether to include EV flexibility or not)
+            "EV_charge_flexibility"=>false, "EV_payback_window"=>8, "EV_interest"=>0.0, "EV_max_energy_factor"=>100.0,
+            "V2G_flexibility"=>false) # Additional parameters for DER (e.g. whether to include EV flexibility or not)
     )
     """
     Create a PRAS file from NEM12 input data.
@@ -149,6 +150,18 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
         return sys
     end
 
+    # Print the parameters for the case being created
+    der_considered = []
+    if "RoofPV" in alias_excluded
+        push!(der_considered, "RoofPV")
+    end
+    if DER_parameters["DSP_flexibility"]
+        push!(der_considered, "DSP")
+    end
+    if DER_parameters["EV_charge_flexibility"]
+        push!(der_considered, "EV (charge flexibility)")
+    end
+
     # ---- CREATE PRAS FILE ----
     @info("Creating PRAS file from input data...")
     println("Scenario: ", scenario)
@@ -157,9 +170,11 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     println("Excluded tech/fuel: ", if isempty(gentech_excluded) "None" else gentech_excluded end)
     println("Excluded aliases: ", if isempty(alias_excluded) "None" else alias_excluded end)
     println("Additional lines included: ", if isempty(line_alias_included) "None" else line_alias_included end)
+    println("DER considered: ", if isempty(der_considered) "None" else der_considered end)
     println("Input folder: ", timeseries_folder)
     if !(weather_folder == "")
         println("Using different weather year from folder: ", weather_folder)
+        @warn "Different weather folder is experimental. It is recommended to create the system based on data from different weather trace obtained via PISP."
     end
     println("")
 
