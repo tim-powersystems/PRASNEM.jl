@@ -10,3 +10,6 @@ include("redistribute_DR.jl")
 # Functions to update a PRAS model with storage operation
 include("updateStorageOperation.jl")
 
+# Function to update a PRAS model with generator commitment and ramping
+include("updateGeneratorOperation.jl")
+

@@ -14,7 +14,7 @@ This function is derating short-term energy storage capacities based on a provid
 The derating_mapping is a Dict where keys are energy storage duration thresholds (in hours) and values are the derating factors (between 0 and 1).
 
 """
-function updateEnergyDerating(sys; derating_mapping = Dict(1.5 => 0.5, 3.5 => 0.75, 7.5 => 0.9))
+function updateEnergyDerating!(sys; derating_mapping = Dict(1.5 => 0.5, 3.5 => 0.75, 7.5 => 0.9))
 
     lower_bound_hours  = 0.0
     for (derating_hours, derating_factor) in sort(derating_mapping)
@@ -38,7 +38,7 @@ end
     Dispatch: Charging is only limited to the times when storage is expected to charge.
 """
 
-function updateStorageMarketDecisionDispatch(sys, res; include_genstorage=true)
+function updateStorageMarketDecisionDispatch!(sys, res; include_genstorage=true)
     
 
     sys.storages.charge_capacity[findall(x -> x == 0, res.stor_charging)] .= 0
@@ -67,7 +67,7 @@ Additionally, demandresponse needs to be removed to avoid it charging storage. T
 
 """
 
-function updateExpectationDispatch(sys, res; include_genstorage=true)
+function updateStorageExpectationDispatch!(sys, res; include_genstorage=true)
     
     for r in 1:length(sys.regions.names)
         # Increase load by charging
@@ -93,10 +93,10 @@ function updateExpectationDispatch(sys, res; include_genstorage=true)
         sys.generatorstorages.inflow .= 0
     end
 
-    # Disable demand response to avoid it charging storage
-    sys.demandresponses.borrow_capacity .= 0
-    
-    return sys
+    if sum(sys.demandresponses.borrow_capacity) > 0
+        @warn "Warning: Demand response borrowing capacity is greater than zero which may allow it to charge storage. Use `PRASNEM.updateDERExpectationDispatch!` to adjust load and disable demand response to avoid this issue."
+    end
+
 end
 
 
