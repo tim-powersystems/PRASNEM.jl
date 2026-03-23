@@ -43,8 +43,14 @@ function find_start_of_critical_event(df_nostor::DataFrame, sample_number::Int, 
     condition_start_before_event = df_nostor.start_index .<= event_start_index
     condition_end_after_event = df_nostor.end_index .>= event_start_index
 
-    # Using the minimum in case there are multiple overlapping events
-    return minimum(df_nostor[findall(condition_same_sample .&& condition_start_before_event .&& condition_end_after_event), :start_index])
+    all_start_indices = df_nostor[findall(condition_same_sample .&& condition_start_before_event .&& condition_end_after_event), :start_index]
+    if isempty(all_start_indices)
+        # In case there is no critical event that overlaps with the start of the USE event, return 0 to indicate that there is no critical event in the df_nostor event.
+        return 0
+    else
+        # Using the minimum in case there are multiple overlapping events
+        return minimum(all_start_indices)
+    end
 end
 
 
@@ -118,12 +124,21 @@ Analyzes all samples in `sfsamples` and returns a DataFrame with event details f
         - storages_energy_before: Total storage energy before the start of the USE event (as a fraction of total capacity if `sys` is provided).
 
 """
-function get_all_event_details(sfsamples; sesamples=nothing, sys=nothing, df_nostor=nothing)
+function get_all_event_details(sfsamples_input; sesamples=nothing, sys=nothing, df_nostor=nothing)
+
+    if typeof(sfsamples_input) <: PRASCore.Results.ShortfallSamplesResult
+        sfsamples = sfsamples_input.shortfall
+    else
+        sfsamples = sfsamples_input
+    end
     
-    df = DataFrame(length=Int[], sum=Int[], maximum=Int[], start_index=Int[], end_index=Int[], start_critical_index=Int[], region=Int[], area=Int[], sample=Int[], storages_energy_before=Float64[], storages_energy_start_critical_period=Float64[])
+    df = DataFrame(length=Int[], sum=Int[], maximum=Int[], 
+        start_index=Int[], end_index=Int[], start_critical_index=Int[], 
+        region=Int[], area=Int[], sample=Int[], 
+        storages_energy_before=Float64[], storages_energy_start_critical_period=Float64[])
 
     if isnothing(sesamples)
-        total_energy = zeros(Float64, 1, size(sfsamples.shortfall, 2), size(sfsamples.shortfall, 3))
+        total_energy = zeros(Float64, 1, size(sfsamples, 2), size(sfsamples, 3))
         total_energy .= NaN
     else
         df.storages_energy_before = zeros(Float64, 0)
@@ -136,17 +151,17 @@ function get_all_event_details(sfsamples; sesamples=nothing, sys=nothing, df_nos
         end
     end
 
-    Nregions = size(sfsamples.shortfall, 1)
-    Nsamples = size(sfsamples.shortfall, 3)
+    Nregions = size(sfsamples, 1)
+    Nsamples = size(sfsamples, 3)
 
     region_area_map = get_region_area_map() # Map region to area
 
     for i in 1:Nsamples
         for r in 1:Nregions
-            t = get_event_details(sfsamples.shortfall[r,:,i])
+            t = get_event_details(sfsamples[r,:,i])
             for event in t
                 if event.start_index == 1
-                    @info "Load shedding in the first time step of sample $i in region $r. Energy before event is set to NaN."
+                    #@info "Load shedding in the first time step of sample $i in region $r. Energy before event is set to NaN."
                     push!(df, (event.length, event.sum, event.maximum, event.start_index, event.end_index, event.start_index, r, region_area_map[r], i, NaN, NaN))
                 else
                     if isnothing(df_nostor)
@@ -154,7 +169,11 @@ function get_all_event_details(sfsamples; sesamples=nothing, sys=nothing, df_nos
                         total_energy_at_critical_index = NaN
                     else
                         start_critical_index = find_start_of_critical_event(df_nostor, i, event.start_index)
-                        total_energy_at_critical_index = total_energy[1,start_critical_index-1,i]
+                        if start_critical_index == 0
+                            total_energy_at_critical_index = NaN
+                        else
+                            total_energy_at_critical_index = total_energy[1,start_critical_index-1,i]
+                        end
                     end
                     push!(df, (event.length, event.sum, event.maximum, event.start_index, event.end_index, start_critical_index, r, region_area_map[r], i, total_energy[1,event.start_index-1,i], total_energy_at_critical_index))
                 end
@@ -163,5 +182,33 @@ function get_all_event_details(sfsamples; sesamples=nothing, sys=nothing, df_nos
     end
 
     return df
+
+end
+
+
+"""
+    calculate_state_change_times(genAvSamples; lineAvSamples=nothing)
+
+Calculates the time steps at which state changes occur in the generator availability samples (`genAvSamples`) and optionally in the line availability samples (`lineAvSamples`).
+
+Returns a list of lists, where each inner list contains the time steps at which state changes occur for a particular sample. Note that 1 will always be included, since the initial availability is also sampled within
+
+"""
+function calculate_state_change_times(genAvSamples; lineAvSamples=nothing)
+
+    Ngens = size(genAvSamples, 1)
+    Nsamples = size(genAvSamples, 3)
+
+    ga_change_idxs = findall(genAvSamples .- cat(fill(1, Ngens, 1, Nsamples), genAvSamples; dims=2)[:, 1:end-1, :] .!= 0);
+    gen_outage_times = [unique(getindex.(ga_change_idxs[getindex.(ga_change_idxs,3) .== s], 2)) for s in 1:Nsamples]
+
+    if isnothing(lineAvSamples)
+        return sort.(gen_outage_times)
+    else
+        Nlines = size(lineAvSamples, 1)
+        la_change_idxs = findall(lineAvSamples .- cat(fill(1, Nlines, 1, Nsamples), lineAvSamples; dims=2)[:, 1:end-1, :] .!= 0.0);
+        line_outage_times = [unique(getindex.(la_change_idxs[getindex.(la_change_idxs,3) .== s], 2)) for s in 1:Nsamples]
+        return [sort(unique(vcat(gen_outage_times[s], line_outage_times[s]))) for s in 1:Nsamples]
+    end
 
 end

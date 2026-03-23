@@ -17,7 +17,8 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     investment_filter::Union{Vector{Any}, Vector{Int}}=[0], # only include assets that are not selected for investment
     active_filter::Union{Vector{Any}, Vector{Int}}=[1], # only include active assets
     line_alias_included::Union{Vector{Any}, Vector{String}}=[], # can include specific lines to be included even if they would be filtered out due to investment/active status
-    weather_folder::String="" # Can specify a specific folder with the timeseries weather data that should be used (no capacities are read from here, just normalised timeseries)
+    weather_folder::String="", # Can specify a specific folder with the timeseries weather data that should be used (no capacities are read from here, just normalised timeseries)
+    DER_parameters=get_DER_parameters(case="base") # Additional parameters for DER (e.g. whether to include EV flexibility or not)
     )
     """
     Create a PRAS file from NEM12 input data.
@@ -58,6 +59,11 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
         P = MW, # Power Unit
         E = MWh # Energy Unit
     )
+
+    # Additional offset for dispatch problem
+    #          This is a "cost" that pushes storages, generatorstorages, demandresponses to also charge/discharge from gens further away (i.e. up to 12 hops)
+    #          This is only enabled/enforced for the custom PRASCore version, that is available at https://github.com/ARPST-UniMelb/PRAS.jl
+    additional_offset_DispatchProblem = 12 
 
     # Hydro default parameters
     default_hydro_values = Dict{String, Any}()
@@ -146,6 +152,29 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
         return sys
     end
 
+    # Print the parameters for the case being created
+    der_considered = []
+    if DER_parameters["RoofPV"]
+        push!(der_considered, "RoofPV")
+    else
+        push!(alias_excluded, "RoofPV")
+    end
+    if DER_parameters["DSP_flexibility"]
+        push!(der_considered, "DSP")
+    else
+        push!(gentech_excluded, "VPP")
+    end
+    if DER_parameters["EV_charge_flexibility"]
+        push!(der_considered, "EV (charge flexibility)")
+    else
+        push!(gentech_excluded, "EV")
+    end
+    if DER_parameters["VPP_flexibility"]
+        push!(der_considered, "VPP")
+    else
+        push!(gentech_excluded, "VPP")
+    end
+
     # ---- CREATE PRAS FILE ----
     @info("Creating PRAS file from input data...")
     println("Scenario: ", scenario)
@@ -154,9 +183,11 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     println("Excluded tech/fuel: ", if isempty(gentech_excluded) "None" else gentech_excluded end)
     println("Excluded aliases: ", if isempty(alias_excluded) "None" else alias_excluded end)
     println("Additional lines included: ", if isempty(line_alias_included) "None" else line_alias_included end)
+    println("DER considered: ", if isempty(der_considered) "None" else der_considered end)
     println("Input folder: ", timeseries_folder)
     if !(weather_folder == "")
         println("Using different weather year from folder: ", weather_folder)
+        @warn "Different weather folder is experimental. It is recommended to create the system based on data from different weather trace obtained via PISP."
     end
     println("")
 
@@ -169,7 +200,7 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, 
         default_hydro_values=default_hydro_values, weather_folder=weather_folder)
     demandresponses, dr_region_attribution = createDemandResponses(demandresponses_input_file, demand_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
-        scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, weather_folder=weather_folder)
+        scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, weather_folder=weather_folder, DER_parameters=DER_parameters)
 
     if length(regions_selected) <= 1
         # If copperplate model is desired
@@ -191,7 +222,7 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
                     demandresponses, dr_region_attribution,
                     lines, line_interface_attribution,
                     ZonedDateTime(start_dt, timezone):units.T(units.L):ZonedDateTime(end_dt, timezone), # Timestamps
-                    Dict("case"=>output_name) # save case name as attribute
+                    Dict("case"=>output_name, "additional_offset_DispatchProblem"=>string(additional_offset_DispatchProblem)) # save case name as attribute, and optional parameter to add additional offset for scheduling problem (only enabled for custom PRAS version that includes this as an option)
                     )
     end
     if !(output_folder == "")
