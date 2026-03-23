@@ -149,7 +149,7 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
 
     # Print the parameters for the case being created
     der_considered = []
-    if !(DER_parameters["RoofPV"])
+    if DER_parameters["RoofPV"]
         push!(der_considered, "RoofPV")
     else
         push!(alias_excluded, "RoofPV")
