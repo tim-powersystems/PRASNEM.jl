@@ -161,9 +161,13 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     end
     if DER_parameters["DSP_flexibility"]
         push!(der_considered, "DSP")
+    else
+        push!(gentech_excluded, "VPP")
     end
     if DER_parameters["EV_charge_flexibility"]
         push!(der_considered, "EV (charge flexibility)")
+    else
+        push!(gentech_excluded, "EV")
     end
     if DER_parameters["VPP_flexibility"]
         push!(der_considered, "VPP")
