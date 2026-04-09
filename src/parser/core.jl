@@ -66,8 +66,6 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     #          This is only enabled/enforced for the custom PRASCore version, that is available at https://github.com/ARPST-UniMelb/PRAS.jl
     additional_offset_DispatchProblem = 12 
 
-    # Hydro default parameters
-
     if weather_folder == timeseries_folder
         weather_folder = "" # Skip updating weather folder if it's the same as the main timeseries folder
     end
@@ -189,7 +187,7 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter)
     genstors, genstors_region_attribution = createGenStorages(storages_input_file, generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, 
-        default_hydro_values=default_hydro_values, weather_folder=weather_folder)
+        default_hydro_values=hydro_parameters, weather_folder=weather_folder)
     demandresponses, dr_region_attribution = createDemandResponses(demandresponses_input_file, demand_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, weather_folder=weather_folder, DER_parameters=DER_parameters)
 
