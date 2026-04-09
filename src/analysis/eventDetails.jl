@@ -185,6 +185,50 @@ function get_all_event_details(sfsamples_input; sesamples=nothing, sys=nothing, 
 
 end
 
+"""
+    get_all_events(filename::String)
+
+Equivalent to `get_all_event_details`, but reads the sparse failure matrix samples from a CSV file instead of taking them as an input argument. This is a more basic version that does not include storage energy details or critical event start indices.
+
+The returned DataFrame contains the following columns:
+    - length: Length of the event (number of consecutive non-zero entries).
+    - sum: Sum of unserved energy in the event.
+    - maximum: Maximum value in the event.
+    - start_index: Starting index of the event in the time series.
+    - end_index: Ending index of the event in the time series.
+    - region: Region number.
+"""
+function get_all_events(filename::String)
+    
+    df_out = DataFrame(length=Int[], sum=Int[], maximum=Int[], 
+        start_index=Int[], end_index=Int[], region=Int[])
+
+    sfsamples = CSV.read(filename, DataFrames.DataFrame) # Read in the sparse failure matrix samples from the CSV file
+
+    Nregions = maximum(sfsamples.I)
+    N = maximum(sfsamples.J)
+    Nsamples = maximum(sfsamples.K)
+
+    for i in 1:Nsamples
+        for r in 1:Nregions
+            idx_rel = findall(sfsamples.I .== r .&& sfsamples.K .== i) # Get all entries for region r and sample i from the sparse failure matrix
+            if isempty(idx_rel)
+                continue
+            else
+                sf = zeros(Int, N) # Create a vector of the time steps for this region and sample, with 1 for time steps with USE and 0 for time steps without USE
+                sf[sfsamples[idx_rel,:J]] .= sfsamples[idx_rel,:V]
+                t = get_event_details(sf)
+                for event in t
+                    push!(df_out, (event.length, event.sum, event.maximum, event.start_index, event.end_index, r))
+                end
+            end
+        end
+    end
+
+    return df_out
+end
+
+
 
 """
     calculate_state_change_times(genAvSamples; lineAvSamples=nothing)
