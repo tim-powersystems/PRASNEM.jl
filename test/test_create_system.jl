@@ -4,10 +4,10 @@ using PRAS
 using Dates
 
 @testset "Create System Tests" begin
-    data_dir = "./src/sample_data/nem12"
-    generator_input_file = joinpath(data_dir, "Generator.csv")
-    storages_input_file = joinpath(data_dir, "ESS.csv")
-    timeseries_folder = joinpath(data_dir, "schedule-24h")
+    data_dir = "/src/sample_data/nem12"
+    generator_input_file = joinpath(@__DIR__, data_dir, "Generator.csv")
+    storages_input_file = joinpath(@__DIR__, data_dir, "ESS.csv")
+    timeseries_folder = joinpath(@__DIR__, data_dir, "schedule-24h")
 
     
     start_dt = DateTime("2025-01-07 00:00:00", dateformat"yyyy-mm-dd HH:MM:SS")
