@@ -126,12 +126,6 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
             chargeefficiency_data[idx, :] .= 1.0 # Irrelevant
             gridinjectioncapacity_data[idx, :] .= gens.capacity[idx_gens, :]
 
-            # Temporary fix to set MCKAY1 as reservoir
-            if row.alias == "MCKAY1" 
-                row.tech = "Reservoir" 
-                @warn("MCKAY1 set to Reservoir - remove this temporary fix when McKay is updated as Reservoir in the input data.")
-            end
-
             if row.tech == "Run-of-River"
                 energycapacity_data[idx, :] .= round.(Int, gens.capacity[idx_gens, :] * hydro_parameters["run_of_river_discharge_time"])
                 dischargeefficiency_data[idx, :] .= hydro_parameters["run_of_river_discharge_efficiency"]
@@ -157,6 +151,9 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
         end
 
         # Set the inflow data and initial state of charge (via "initial soc" inflow - this should be changed a a later time)
+
+        # Includes manual fix to scale inflows by unit number (remove later)
+        @warn("Scaling inflows by unit number - remove this temporary fix when the inflow timeseries are updated in PISP.")
         if string(row.id_gen) in names(inflows_gen_filtered)
             inflow_data[idx, :] = round.(Int, inflows_gen_filtered[!, string(row.id_gen)] ./ max(row.n, 1))
         elseif string(row.id_ess) in names(inflows_stor_filtered)
@@ -165,8 +162,6 @@ function createGenStorages(storages_input_file, generators_input_file, timeserie
             inflow_data[idx, :] .= round.(Int, gridinjectioncapacity_data[idx, :] * hydro_parameters["default_static_inflow"])
         end
 
-        # Manual fix to scale inflows by unit number (remove later)
-        @warn("Scaling inflows by unit number - remove this temporary fix when the inflow timeseries are updated in PISP.")
 
         # Now determine the initial state of charge
         
