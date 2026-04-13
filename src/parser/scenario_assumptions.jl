@@ -119,6 +119,10 @@ function get_hydro_parameters(;case="base")
         hydro_parameters["reservoir_carryover_efficiency"] = 1.0
         # Default inflow assumptions
         hydro_parameters["default_static_inflow"] = 0.0 # As a factor of grid injection power capacity
+
+        # Additional parameters for SchedNEM
+        hydro_parameters["hydro_discharging_cost"] = 8.58 # $/MWh
+
     else
         error("Hydro parameter case not recognised.")
     end
