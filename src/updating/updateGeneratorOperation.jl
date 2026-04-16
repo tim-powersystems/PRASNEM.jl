@@ -12,7 +12,7 @@ function updateUnitCommitment!(sys, res; consider_ramping=true)
 
     if consider_ramping
         not_ramping_limited = zeros(size(res.gon))
-        not_ramping_limited[findall(res.p_gen_max .== sys.generators.capacity)] .= 1
+        not_ramping_limited[findall(res.p_gen_max .== sys.generators.capacity[:, 1:N])] .= 1
         sys.generators.capacity[:, 1:N] .= sys.generators.capacity[:, 1:N] .* max.(res.gon, not_ramping_limited)
     else
         
