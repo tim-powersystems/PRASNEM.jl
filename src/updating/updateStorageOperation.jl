@@ -68,29 +68,31 @@ Additionally, demandresponse needs to be removed to avoid it charging storage. T
 """
 
 function updateStorageExpectationDispatch!(sys, res; include_genstorage=true)
+
+    N = length(res.stor_charging[1, :]) # Number of timesteps
     
     for r in 1:length(sys.regions.names)
         # Increase load by charging
-        sys.regions.load[r, :] .+= sum(res.stor_charging[sys.region_stor_idxs[r], :], dims=1)[:]
+        sys.regions.load[r, 1:N] .+= sum(res.stor_charging[sys.region_stor_idxs[r], :], dims=1)[:]
         if include_genstorage
-            sys.regions.load[r, :] .+= sum(res.genstor_charging[sys.region_genstor_idxs[r], :], dims=1)[:]
+            sys.regions.load[r, 1:N] .+= sum(res.genstor_charging[sys.region_genstor_idxs[r], :], dims=1)[:]
         end
         
         # Decrease load by discharging
-        sys.regions.load[r, :] .-= sum(res.stor_discharging[sys.region_stor_idxs[r], :], dims=1)[:]
+        sys.regions.load[r, 1:N] .-= sum(res.stor_discharging[sys.region_stor_idxs[r], :], dims=1)[:]
         if include_genstorage
-            sys.regions.load[r, :] .-= sum(res.genstor_discharging[sys.region_genstor_idxs[r], :], dims=1)[:]
+            sys.regions.load[r, 1:N] .-= sum(res.genstor_discharging[sys.region_genstor_idxs[r], :], dims=1)[:]
         end
     end
     # Disable storage / genstorage 
-    sys.storages.discharge_capacity .= 0
-    sys.storages.charge_capacity .= 0
-    sys.storages.energy_capacity .= 0
+    sys.storages.discharge_capacity[:, 1:N] .= 0
+    sys.storages.charge_capacity[:, 1:N] .= 0
+    sys.storages.energy_capacity[:, 1:N] .= 0
     if include_genstorage
-        sys.generatorstorages.gridinjection_capacity .= 0
-        sys.generatorstorages.discharge_capacity .= 0
-        sys.generatorstorages.energy_capacity .= 0
-        sys.generatorstorages.inflow .= 0
+        sys.generatorstorages.gridinjection_capacity[:, 1:N] .= 0
+        sys.generatorstorages.discharge_capacity[:, 1:N] .= 0
+        sys.generatorstorages.energy_capacity[:, 1:N] .= 0
+        sys.generatorstorages.inflow[:, 1:N] .= 0
     end
 
     if sum(sys.demandresponses.borrow_capacity) > 0

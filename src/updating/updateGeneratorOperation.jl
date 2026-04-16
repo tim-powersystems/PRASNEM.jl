@@ -7,15 +7,16 @@ The flag consider_ramping determines whether to consider generators that are not
 """
 function updateUnitCommitment!(sys, res; consider_ramping=true)
 
+    N = length(res.gon[1, :]) # Number of timesteps
     # Update generator capacities based on commitment status
 
     if consider_ramping
         not_ramping_limited = zeros(size(res.gon))
         not_ramping_limited[findall(res.p_gen_max .== sys.generators.capacity)] .= 1
-        sys.generators.capacity .= sys.generators.capacity .* max.(res.gon, not_ramping_limited)
+        sys.generators.capacity[:, 1:N] .= sys.generators.capacity[:, 1:N] .* max.(res.gon, not_ramping_limited)
     else
         
-        sys.generators.capacity .= sys.generators.capacity .* res.gon
+        sys.generators.capacity[:, 1:N] .= sys.generators.capacity[:, 1:N] .* res.gon
     end
 
     return sys
@@ -28,8 +29,10 @@ Update the generator ramping constraints based on the expected ramping profiles 
 """
 function updateRamping!(sys, res)
 
+    N = length(res.gon[1, :]) # Number of timesteps
+
     # Update generator capacities based on ramping (or commitment status if that is already applied)
-    sys.generators.capacity .= min.(sys.generators.capacity, res.p_gen_max)
+    sys.generators.capacity[:, 1:N] .= min.(sys.generators.capacity[:, 1:N], res.p_gen_max)
 
     return sys
 end
