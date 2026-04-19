@@ -201,7 +201,7 @@ The returned DataFrame contains the following columns:
 function get_all_events(filename::String)
     
     df_out = DataFrame(length=Int[], sum=Int[], maximum=Int[], 
-        start_index=Int[], end_index=Int[], region=Int[])
+        start_index=Int[], end_index=Int[], region=Int[], sample=Int[])
 
     sfsamples = CSV.read(filename, DataFrames.DataFrame) # Read in the sparse failure matrix samples from the CSV file
 
@@ -219,7 +219,7 @@ function get_all_events(filename::String)
                 sf[sfsamples[idx_rel,:J]] .= sfsamples[idx_rel,:V]
                 t = get_event_details(sf)
                 for event in t
-                    push!(df_out, (event.length, event.sum, event.maximum, event.start_index, event.end_index, r))
+                    push!(df_out, (event.length, event.sum, event.maximum, event.start_index, event.end_index, r, i))
                 end
             end
         end
