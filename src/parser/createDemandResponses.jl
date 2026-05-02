@@ -67,9 +67,9 @@ function createDemandResponses(der_input_file, demand_input_file, timeseries_fol
                 dr_info.payback_window[i] = DER_parameters["EV_payback_window"]
                 dr_info.energy_interest[i] = DER_parameters["EV_interest"]
             elseif dr_info.tech[i] == "DSP"
-                dr_info.duration[i] = DER_parameters["DSP_max_energy_factor"]
-                dr_info.payback_window[i] = DER_parameters["DSP_payback_window"]
-                dr_info.energy_interest[i] = DER_parameters["DSP_interest"]
+                dr_info.duration[i] =  DER_parameters["DSP_limit_energy_per_window"]["enabled"] ? DER_parameters["DSP_limit_energy_per_window"]["max_energy_per_window_per_capacity"] : 100
+                dr_info.payback_window[i] = DER_parameters["DSP_limit_energy_per_window"]["enabled"] ? DER_parameters["DSP_limit_energy_per_window"]["max_energy_time_window"] : 24
+                dr_info.energy_interest[i] = (DER_parameters["DSP_limit_energy_per_window"]["enabled"] && dr_info.name[i][end-1:end] == "RR") ? 0.0 : -1.0
             end
         end
 
@@ -80,7 +80,7 @@ function createDemandResponses(der_input_file, demand_input_file, timeseries_fol
         dr_borrow_power_capacity = zeros(Int, number_of_drs, units.N)
         dr_payback_power_capacity = zeros(Int, number_of_drs, units.N) 
         dr_energy_capacity = zeros(Int, number_of_drs, units.N)
-        dr_energy_interest = fill(-1.0, number_of_drs, units.N)  # Default is -100% borrowed energy interest => Energy doesn't need to be paid back
+        dr_energy_interest = fill(-1.0, number_of_drs, units.N)  # Default is -100% borrowed energy interest => Energy doesn't need to be paid back in general
         dr_payback_window = zeros(Int, number_of_drs, units.N)
         for i in 1:number_of_drs
             dr_id = dr_info.id_der[i]
