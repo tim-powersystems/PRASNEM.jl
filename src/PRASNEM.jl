@@ -5,6 +5,7 @@ using CSV
 using Dates
 using DataFrames
 import Base.Threads
+import Plots
 using PISP
 
 # Include customised functions to analyse PRAS output and to handle area/region mappings

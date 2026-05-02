@@ -14,13 +14,27 @@ function get_added_lines_per_year(;scenario::Int=2)
             2027 => ["NL_86_INV30"], # HumeLink
             2028 => ["NL_86_INV30"], 
             2029 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3"], # Sydney Ring North, Gladstone Grid Reinforcement
-            2030 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "NL_109_INV35", "VNI North", "VNI South", "NL_98_INV34"], # Marinus Link Stage 1, VNI + VNI West
-            2031 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "NL_109_INV35", "VNI North", "VNI South", "NL_98_INV34"],
-            2032 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "NL_109_INV35", "VNI North", "VNI South", "NL_98_INV34", "NL_42_INV8"], # QLD SuperGrid South
-            2033 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "NL_109_INV35", "VNI North", "VNI South", "NL_98_INV34", "NL_42_INV8", "NL_109_INV36"], # Marinus Link Stage 2
-            2034 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "NL_109_INV35", "VNI North", "VNI South", "NL_98_INV34", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"], # QNI Connect
-            2035 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "NL_109_INV35", "VNI North", "VNI South", "NL_98_INV34", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"]
-            )
+            2030 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34"], #  VNI + VNI West
+            2031 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35"], #  Marinus Link Stage 1
+            2032 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8"], # QLD SuperGrid South 
+            2033 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"], # Marinus Link Stage 2, QNI Connect
+            2034 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
+            2035 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
+            2036 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
+            2037 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
+            2038 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
+            2039 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
+            2040 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
+            2041 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
+            2042 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
+            2043 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
+            2044 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
+            2045 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
+            2046 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
+            2047 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
+            2048 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
+            2049 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
+            2050 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"])
     else
         error("Line addition assumptions for scenario $scenario not defined.")
     end
@@ -40,9 +54,7 @@ function get_DER_parameters(; case="base")
         return Dict(
             "RoofPV"=>true, # For PRASNEM (if false, RoofPV generation units are excluded)
             "DSP_flexibility"=>true, # For PRASNEM and SchedNEM
-                "DSP_payback_window"=>24, 
-                "DSP_interest"=>-1.0, 
-                "DSP_max_energy_factor"=>2.0, # This is to define the capacity of the DSP in each time step (e.g. the "storage energy capacity" of the DSP)
+                "DSP_interest"=>-1.0,  # default value
                 "DSP_payback_before_borrowing"=>false, # Only relevant for SchedNEM
                 "DSP_limit_energy_per_window"=>Dict("enabled" => true,
                     "max_energy_time_window" => 24, 
@@ -51,7 +63,7 @@ function get_DER_parameters(; case="base")
                     ),
             "EV_charge_flexibility"=>false, # For PRASNEM and SchedNEM
                 "EV_payback_window"=>10, 
-                "EV_interest"=>0.0, 
+                "EV_interest"=>0.0, # default value
                 "EV_max_energy_factor"=>100.0, # This is to define the capacity of the DSP in each time step (e.g. the "storage energy capacity" of the EV)
                 "EV_payback_before_borrowing"=>false, # Only relevant for SchedNEM
                 "EV_limit_energy_per_window"=>Dict("enabled" => false,
