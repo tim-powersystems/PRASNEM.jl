@@ -36,10 +36,10 @@ function get_added_lines_per_year(;scenario::Int=2)
             2049 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"],
             2050 => ["NL_86_INV30", "NL_67_INV19", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_109_INV36", "NL_54_INV10"])
     else
-        error("Line addition assumptions for scenario $scenario not defined.")
+        @error("Line addition assumptions for scenario $scenario not defined.")
     end
 
-        return added_lines_per_year
+    return added_lines_per_year
 end
 
 """
@@ -51,6 +51,28 @@ Function to get predefined DER parameters for different cases, as outlined in th
 function get_DER_parameters(; case="base")
 
     if case == "base"
+        return Dict(
+            "RoofPV"=>true, # For PRASNEM (if false, RoofPV generation units are excluded)
+            "DSP_flexibility"=>false, # For PRASNEM and SchedNEM
+                "DSP_interest"=>-1.0,  # default value
+                "DSP_payback_before_borrowing"=>false, # Only relevant for SchedNEM
+                "DSP_limit_energy_per_window"=>Dict("enabled" => true,
+                    "max_energy_time_window" => 24, 
+                    "max_energy_per_window_per_capacity" => 3.0, 
+                    "limits_on_price_bands" => [0] # Price band 0 is for the reliability response, other prices are (300, 500, 1000, 7500)
+                    ),
+            "EV_charge_flexibility"=>false, # For PRASNEM and SchedNEM
+                "EV_payback_window"=>10, 
+                "EV_interest"=>0.0, # default value
+                "EV_max_energy_factor"=>100.0, # This is to define the capacity of the DSP in each time step (e.g. the "storage energy capacity" of the EV)
+                "EV_payback_before_borrowing"=>false, # Only relevant for SchedNEM
+                "EV_limit_energy_per_window"=>Dict("enabled" => false,
+                    "max_energy_time_window" => 24, 
+                    "max_energy_per_window_per_capacity" => 24.0
+                    ),
+            "VPP_flexibility"=>false, # For PRASNEM and SchedNEM (if false, VPP storage units are disabled by setting their capacities to zero) 
+            )
+    elseif case == "demand_response"
         return Dict(
             "RoofPV"=>true, # For PRASNEM (if false, RoofPV generation units are excluded)
             "DSP_flexibility"=>true, # For PRASNEM and SchedNEM
