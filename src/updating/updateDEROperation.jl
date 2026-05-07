@@ -5,6 +5,11 @@ Include the DER dispatch within the load and disable demand response to avoid it
 """
 function updateDERExpectationDispatch!(sys, res)
 
+    if sys.demandresponses.names == []
+        @info "No demand response resources, skipping updateDERExpectationDispatch!"
+        return sys
+    end
+
     N = length(res.drs_borrowing[1, :]) # Number of timesteps
 
     # Decrease load by borrowing energy
