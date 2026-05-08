@@ -131,6 +131,10 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
 
     output_filename = string(output_name, ".pras")
 
+    if timeseries_folder[end-3:end] != string(Dates.year(start_dt))
+        @warn "The timeseries folder specified does not match the year of the start date. Please ensure that the timeseries data in this folder is appropriate for the desired time period."
+    end
+
 
     output_filepath = joinpath(output_folder, output_filename)
 
