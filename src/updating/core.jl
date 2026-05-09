@@ -18,3 +18,6 @@ include("updateDEROperation.jl")
 
 # Function to update a PRAS model with storage outage derating
 include("updateStorageOutageDerating.jl")
+
+# Functions to update a PRAS model with resilience-based generator and line derating
+include("resilience/core.jl")
