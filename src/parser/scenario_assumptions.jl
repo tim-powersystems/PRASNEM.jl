@@ -1,13 +1,42 @@
 """
     get_added_lines_per_year(;scenario::Int=2)
 
-Function to get the lines to be added per year based on the actionable and anticipated projects per the ISP.
+Function to get the lines to be added per year based on the actionable and anticipated projects per the CDP14 (ODP) of the ISP24.
 
 """
-function get_added_lines_per_year(;scenario::Int=2)
+function get_added_lines_per_year(;scenario="step change")
 
-    if scenario == 2
-        # Define lines to be added per year based on scenario assumptions
+    if scenario == "odp"
+        # Define lines to be added per year based on Step Change, as reported in Appendix 5 of the ISP24
+        added_lines_per_year = Dict(
+            2025 => [],
+            2026 => [],
+            2027 => [], 
+            2028 => [], 
+            2029 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14"], # HumeLink, Sydney Ring North, New England REZ Link 1
+            2030 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34"], # Gladstone Grid Reinforcement, VNI, VNI West, 
+            2031 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35"], #  Marinus Link Stage 1
+            2032 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8"], # QLD SuperGrid South 
+            2033 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", ], 
+            2034 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", ], 
+            2035 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_54_INV10", "NL_65_INV15"], # QNI Connect, New England REZ Transmission Link 2
+            2036 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_54_INV10", "NL_65_INV15"],
+            2037 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_54_INV10", "NL_65_INV15", "NL_109_INV36"], # Marinus Link Stage 2, 
+            2038 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_54_INV10", "NL_65_INV15", "NL_109_INV36"],
+            2039 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_54_INV10", "NL_65_INV15", "NL_109_INV36"],
+            2040 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_54_INV10", "NL_65_INV15", "NL_109_INV36"],
+            2041 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_54_INV10", "NL_65_INV15", "NL_109_INV36"],
+            2042 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_54_INV10", "NL_65_INV15", "NL_109_INV36"],
+            2043 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_54_INV10", "NL_65_INV15", "NL_109_INV36"],
+            2044 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_54_INV10", "NL_65_INV15", "NL_109_INV36"],
+            2045 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_54_INV10", "NL_65_INV15", "NL_109_INV36", "NL_21_INV1"], # QLD SuperGrid North 1
+            2046 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_54_INV10", "NL_65_INV15", "NL_109_INV36", "NL_21_INV1"],
+            2047 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_54_INV10", "NL_65_INV15", "NL_109_INV36", "NL_21_INV1"],
+            2048 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_54_INV10", "NL_65_INV15", "NL_109_INV36", "NL_21_INV1"],
+            2049 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_54_INV10", "NL_65_INV15", "NL_109_INV36", "NL_21_INV1"],
+            2050 => ["NL_86_INV30", "NL_67_INV19", "NL_65_INV14", "NL_23_INV3", "VNI North", "VNI South", "NL_98_INV34", "NL_109_INV35", "NL_42_INV8", "NL_54_INV10", "NL_65_INV15", "NL_109_INV36", "NL_21_INV1"])
+    elseif scenario == "step change"
+        # Define lines to be added per year based on CDP14 (ODP) of the ISP24, as reported in the ISP24 Core Data Workbook
         added_lines_per_year = Dict(
             2025 => [],
             2026 => [],
