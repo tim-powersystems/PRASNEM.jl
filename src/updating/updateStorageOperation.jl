@@ -18,7 +18,7 @@ function updateEnergyDerating!(sys; derating_mapping = Dict(1.5 => 0.5, 3.5 => 0
 
     lower_bound_hours  = 0.0
     for (derating_hours, derating_factor) in sort(derating_mapping)
-        @info("<",derating_hours, " hours energy storage derated to ", derating_factor * 100, "% capacity.")
+        @info("<" * string(derating_hours) * " hours energy storage derated to " * string(derating_factor * 100) * "% capacity.")
         for s in 1:length(sys.storages.names)
             ecap = maximum(sys.storages.energy_capacity[s, :])
             pcap = maximum(sys.storages.discharge_capacity[s, :])  # Assuming capacity is constant over time
