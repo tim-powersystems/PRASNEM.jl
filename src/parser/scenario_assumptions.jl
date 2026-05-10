@@ -116,7 +116,7 @@ function get_DER_parameters(; case="base")
                     "max_energy_time_window" => 24, 
                     "max_energy_per_window_per_capacity" => 24.0
                     ),
-            "VPP_flexibility"=>false, # For PRASNEM and SchedNEM (if false, VPP storage units are disabled by setting their capacities to zero) 
+            "VPP_flexibility"=>true, # For PRASNEM and SchedNEM (if false, VPP storage units are disabled by setting their capacities to zero) 
             )
     elseif case == "coordination"
         return Dict(

@@ -36,13 +36,13 @@ function createGenerators(generators_input_file, timeseries_folder, units, regio
         gen_info.mttrfull = coalesce.(gen_info.mttrfull, 1.0) # Replace missing mttrfull with 1.0
         gen_info.mttrfull[findall(gen_info.mttrfull .== 0.0)] .= 1.0 # Replace any 0.0 mttrfull with 1.0 to avoid division by zero
     else
-        println("No mttrfull column found in generator data. Setting mttrfull to 1.0 for all generators.")
+        @warn("No mttrfull column found in generator data. Setting mttrfull to 1.0 for all generators.")
         gen_info.mttrfull = fill(1.0, nrow(gen_info)) # If no mttrfull column, set to 1.0
     end
     if "fullout" in names(gen_info)
         gen_info.fullout = coalesce.(gen_info.fullout, 0.0) # Replace missing fullout with 0.0
     else
-        println("No fullout column found in generator data. Setting fullout to 0.0 for all generators.")
+        @warn("No fullout column found in generator data. Setting fullout to 0.0 for all generators.")
         gen_info.fullout = fill(0.0, nrow(gen_info)) # If no fullout column, set to 0.0
     end
     gen_info.repairrate .= 1 ./ gen_info.mttrfull
@@ -121,7 +121,7 @@ function createGenerators(generators_input_file, timeseries_folder, units, regio
         if (row.id_gen in timeseries_n_gen_ids)
             # Check if the number of units changes over time
             if (minimum(timeseries_n[!, "$(row.id_gen)"]) < row.n)
-                println("Note: The number of units for generator id_gen $(row.id_gen) changes over time. Adjusting the availability accordingly.")
+                @info("Note: The number of units for generator id_gen $(row.id_gen) changes over time. Adjusting the availability accordingly.")
                 # Now iterate through the different unique levels of n
                 unique_n = unique(timeseries_n[!, "$(row.id_gen)"])
                 sort!(unique_n)
