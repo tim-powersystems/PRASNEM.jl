@@ -33,13 +33,13 @@ function createStorages(storages_input_file, timeseries_folder, units, regions_s
         stor_data.mttrfull = coalesce.(stor_data.mttrfull, 1.0) # Replace missing mttrfull with 1.0
         stor_data.mttrfull[findall(stor_data.mttrfull .== 0.0)] .= 1.0 # Replace any 0.0 mttrfull with 1.0 to avoid division by zero
     else
-        println("No mttrfull column found in storage data. Setting mttrfull to 1.0 for all storages.")
+        @warn("No mttrfull column found in storage data. Setting mttrfull to 1.0 for all storages.")
         stor_data.mttrfull = fill(1.0, nrow(stor_data)) # If no mttrfull column, set to 1.0
     end
     if "fullout" in names(stor_data)
         stor_data.fullout = coalesce.(stor_data.fullout, 0.0) # Replace missing fullout with 0.0
     else
-        println("No fullout column found in storage data. Setting fullout to 0.0 for all storages.")
+        @warn("No fullout column found in storage data. Setting fullout to 0.0 for all storages.")
         stor_data.fullout = fill(0.0, nrow(stor_data)) # If no fullout column, set to 0.0
     end
     stor_data.repairrate .= 1 ./ stor_data.mttrfull
@@ -156,7 +156,7 @@ function createStorages(storages_input_file, timeseries_folder, units, regions_s
         if (row.id_ess in timeseries_n_ess_ids)
             # Check if the number of units changes over time
             if (minimum(timeseries_n[!, "$(row.id_ess)"]) < row.n)
-                println("Note: The number of units for storage id_ess $(row.id_ess) changes over time. Adjusting the availability accordingly.")
+                @info("The number of units for storage id_ess $(row.id_ess) changes over time. Adjusting the availability accordingly.")
                 # Now iterate through the different unique levels of n
                 unique_n = unique(timeseries_n[!, "$(row.id_ess)"])
                 sort!(unique_n)

@@ -85,7 +85,7 @@ function update_dates(df, year::Int)
         # If the original year is a leap year and the new year is not, remove Feb 29
         df = filter(row -> !(month(row.date) == 2 && day(row.date) == 29), df)
     elseif !isleapyear(df.date[1]) && isleapyear(year)
-        println("INFO: Original data is not a leap year, but the target year is a leap year. Adding Feb 29 as duplicate of Feb 28.")
+        @info("Original data is not a leap year, but the target year is a leap year. Adding Feb 29 as duplicate of Feb 28.")
         # Add Feb 29 as the same as Feb 28
         feb28_rows = filter(row -> month(row.date) == 2 && day(row.date) == 28, df)
         feb29_rows = deepcopy(feb28_rows)
@@ -111,7 +111,7 @@ function update_with_weather_year(df_filtered, df_filtered_weather; timeseries_n
         elseif col in names(df_filtered_weather)
             df_filtered[!, col] = df_filtered_weather[!, col]
         else
-            println("WARNING: Column $col in original data $timeseries_name not found in weather year data. Skipping this column.")
+            @warn("Column $col in original data $timeseries_name not found in weather year data. Skipping this column.")
         end
     end
 

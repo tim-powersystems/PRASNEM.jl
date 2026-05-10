@@ -47,7 +47,7 @@ function NEUE_area(sys, sf; bus_file_path::String="../sample_data/nem12/Bus.csv"
             load_weights = sum(sys.regions.load[area_buses,:], dims=2) ./ sum(sys.regions.load[area_buses,:])
             avg_neue = sum(neue_bus .* load_weights ) / length(neue_bus)
             neue_areas[area_id] = avg_neue
-            println("$(area_names[area_id]) - Average NEUE: $(round(avg_neue, digits=2)) ppm")
+            @info("$(area_names[area_id]) - Average NEUE: $(round(avg_neue, digits=2)) ppm")
         end
     end
 

@@ -25,7 +25,7 @@ function remove_intraarea_constraints(sys; bus_file_path::String="../sample_data
                         sys.lines.backward_capacity[line_idxs,:] .= high_limit
                         sys.lines.forward_capacity[line_idxs,:] .= high_limit
 
-                        println("Increased limit of interface $k between bus $bus_i and bus $bus_j to $high_limit")
+                        @info("Increased limit of interface $k between bus $bus_i and bus $bus_j to $high_limit")
                     end
                 end
             end

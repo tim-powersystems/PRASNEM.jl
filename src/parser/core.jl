@@ -139,8 +139,7 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     output_filepath = joinpath(output_folder, output_filename)
 
     if !(output_folder == "") &&  ispath(output_filepath)
-        @info("Output file already exists: $output_filepath")
-        println("Loading file...")
+        @info("Output file already exists: $output_filepath\nLoading file...")
         sys = SystemModel(output_filepath)
         sys.attrs["case"] = output_name # ensure case name is set
         return sys
@@ -170,20 +169,21 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     end
 
     # ---- CREATE PRAS FILE ----
-    @info("Creating PRAS file from input data...")
-    println("Scenario: ", scenario)
-    println("Regions: ", if isempty(regions_selected) "All" else regions_selected end )
-    println("Timeseries: ", start_dt,": ", units.T(units.L), " :", end_dt)
-    println("Excluded tech/fuel: ", if isempty(gentech_excluded) "None" else gentech_excluded end)
-    println("Excluded aliases: ", if isempty(alias_excluded) "None" else alias_excluded end)
-    println("Additional lines included: ", if isempty(line_alias_included) "None" else line_alias_included end)
-    println("DER considered: ", if isempty(der_considered) "None" else der_considered end)
-    println("Input folder: ", timeseries_folder)
+    info_string = "Creating PRAS file from input data...\n"
+    info_string *= "Scenario: $(scenario)\n"
+    info_string *= "Regions: $(isempty(regions_selected) ? "All" : join(regions_selected, ", "))\n"
+    info_string *= "Timeseries: $(start_dt) to $(end_dt)\n"
+    info_string *= "Excluded tech/fuel: $(isempty(gentech_excluded) ? "None" : join(gentech_excluded, ", "))\n"
+    info_string *= "Excluded aliases: $(isempty(alias_excluded) ? "None" : join(alias_excluded, ", "))\n"
+    info_string *= "Additional lines included: $(isempty(line_alias_included) ? "None" : join(line_alias_included, ", "))\n"
+    info_string *= "DER considered: $(isempty(der_considered) ? "None" : join(der_considered, ", "))\n"
+    info_string *= "Input folder: $(timeseries_folder)\n"
+    @info(info_string)
+
     if !(weather_folder == "")
-        println("Using different weather year from folder: ", weather_folder)
+        @info("Using different weather year from folder: ", weather_folder)
         @warn "Different weather folder is experimental. It is recommended to create the system based on data from different weather trace obtained via PISP."
     end
-    println("")
 
     regions = createRegions(demand_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; scenario=scenario, weather_folder=weather_folder)
     gens, gen_region_attribution = createGenerators(generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 

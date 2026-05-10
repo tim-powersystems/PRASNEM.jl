@@ -18,7 +18,7 @@ function updateEnergyDerating!(sys; derating_mapping = Dict(1.5 => 0.5, 3.5 => 0
 
     lower_bound_hours  = 0.0
     for (derating_hours, derating_factor) in sort(derating_mapping)
-        println("<",derating_hours, " hours energy storage derated to ", derating_factor * 100, "% capacity.")
+        @info("<",derating_hours, " hours energy storage derated to ", derating_factor * 100, "% capacity.")
         for s in 1:length(sys.storages.names)
             ecap = maximum(sys.storages.energy_capacity[s, :])
             pcap = maximum(sys.storages.discharge_capacity[s, :])  # Assuming capacity is constant over time
@@ -96,7 +96,7 @@ function updateStorageExpectationDispatch!(sys, res; include_genstorage=true)
     end
 
     if sum(sys.demandresponses.borrow_capacity) > 0
-        @warn "Warning: Demand response borrowing capacity is greater than zero which may allow it to charge storage. Use `PRASNEM.updateDERExpectationDispatch!` to adjust load and disable demand response to avoid this issue."
+        @warn "Demand response borrowing capacity is greater than zero which may allow it to charge storage. Use `PRASNEM.updateDERExpectationDispatch!` to adjust load and disable demand response to avoid this issue."
     end
 
 end

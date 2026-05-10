@@ -23,7 +23,7 @@ function createLinesInterfaces(lines_input_file, timeseries_folder, units, regio
         # Check if all the specific lines to include exist between the selected regions
         line_alias_not_found = setdiff(line_alias_included, line_data.alias)
         if !isempty(line_alias_not_found)
-            println("WARNING: Couldn't find lines $line_alias_not_found between the selected regions! Check for spelling and/or region selection.")
+            @warn(" Couldn't find lines $line_alias_not_found between the selected regions! Check for spelling and/or region selection.")
         end
         # Include specific lines even if they would be filtered out
         filter!(row -> (row.alias in line_alias_included) || (row.investment in investment_filter && row.active in active_filter), line_data)
@@ -61,13 +61,13 @@ function createLinesInterfaces(lines_input_file, timeseries_folder, units, regio
     if "mttrfull" in names(line_data)
         line_data.mttrfull = coalesce.(line_data.mttrfull, 1.0) # Replace missing mttrfull with 1.0
     else
-        println("No mttrfull column found in line data. Setting mttrfull to 1.0 for all lines.")
+        @warn("No mttrfull column found in line data. Setting mttrfull to 1.0 for all lines.")
         line_data.mttrfull = fill(1.0, nrow(line_data)) # If no mttrfull column, set to 1.0
     end
     if "fullout" in names(line_data)
         line_data.fullout = coalesce.(line_data.fullout, 0.0) # Replace missing fullout with 0.0
     else
-        println("No fullout column found in line data. Setting fullout to 0.0 for all lines.")
+        @warn("No fullout column found in line data. Setting fullout to 0.0 for all lines.")
         line_data.fullout = fill(0.0, nrow(line_data)) # If no fullout column, set to 0.0
     end
     line_data.repair_rate .= 1 ./ line_data.mttrfull

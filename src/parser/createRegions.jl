@@ -46,7 +46,7 @@ function createRegions(demand_input_file, timeseries_folder, units,
 
         # Check if the number of timesteps is less than expected
         if length(demand) < units.N
-            println("WARNING: Fewer timesteps in the load data than expected. Padding with zeros.")
+            @warn("Fewer timesteps in the load data than expected. Padding with zeros.")
             # If there are fewer timesteps than expected, pad with zeros
             demand_values_rounded = vcat(round.(Int, demand), zeros(Int, units.N - length(demand)))
         else
@@ -65,7 +65,7 @@ function createRegions(demand_input_file, timeseries_folder, units,
             # Find all the demand that is in this region
             dem_ids_in_region = dem_info.id_dem[findall(dem_info.id_bus .== region)]
             if isempty(dem_ids_in_region)
-                println("Info: No demand found for region $(region). Setting demand to zero.")
+                @warn("No demand found for region $(region). Setting demand to zero.")
             else
                 # Sum up the demand for all the demand ids in this region
                 demand_values_rounded[i, :] = round.(Int, sum.(eachrow(df_filtered[!, string.(dem_ids_in_region)])))
