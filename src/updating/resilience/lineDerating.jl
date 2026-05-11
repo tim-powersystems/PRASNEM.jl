@@ -55,6 +55,10 @@ function applyLineHeatwaveDerating!(sys, resilience_folder::String)
          continue
       end
       # For each of those line indices, update the capacity timeseries with the correction factor
+      if any(isnan.(l_fwcap_unstacked[!, "$(id)"])) || any(isnan.(l_rvcap_unstacked[!, "$(id)"]))
+         @warn("NaN values found in derating timeseries for line $(id). Skipping derating for this line.")
+         continue
+      end
       new_fwcap = round.(Int, reshape(l_fwcap_unstacked[!, "$(id)"], 1, :))
       new_rvcap = round.(Int, reshape(l_rvcap_unstacked[!, "$(id)"], 1, :))
       if any(new_fwcap .< sys.lines.forward_capacity[rel_line_idxs, t]) .|| any(new_rvcap .< sys.lines.backward_capacity[rel_line_idxs, t])
