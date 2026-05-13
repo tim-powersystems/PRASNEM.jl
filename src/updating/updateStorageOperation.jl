@@ -15,9 +15,6 @@ The derating_mapping is a Dict where keys are energy storage duration thresholds
 
 """
 function updateEnergyDerating!(sys; derating_mapping = Dict(1.5 => 0.5, 3.5 => 0.75, 7.5 => 0.9), derate_VPPs=0.5)
-    if any(sys.storages.categories .== "VPP") && derate_VPPs < 1.0
-        @info "VPPs are present in the system and will be derated by a factor of $(derate_VPPs * 100)% regardless of their energy duration."
-    end
 
     lower_bound_hours  = 0.0
     for (derating_hours, derating_factor) in sort(derating_mapping)
@@ -28,8 +25,7 @@ function updateEnergyDerating!(sys; derating_mapping = Dict(1.5 => 0.5, 3.5 => 0
             pcap = maximum(sys.storages.discharge_capacity[s, :])  # Assuming capacity is constant over time
 
             if (sys.storages.categories[s] == "VPP") && (derate_VPPs < 1.0)
-                # Derate VPPs by the specified factor regardless of their energy duration
-                sys.storages.energy_capacity[s, :] .= round.(Int, sys.storages.energy_capacity[s, :] * derate_VPPs)
+                continue # Skip derating for VPPs as they will be derated at the end
             else
                 # Derate all other storages based on their energy duration
                 energy_hours = ecap / pcap
@@ -40,6 +36,15 @@ function updateEnergyDerating!(sys; derating_mapping = Dict(1.5 => 0.5, 3.5 => 0
 
         end
         lower_bound_hours = derating_hours
+    end
+
+    if any(sys.storages.categories .== "VPP") && (derate_VPPs < 1.0)
+        @info "VPPs are present in the system and will be derated by a factor of $(derate_VPPs * 100)% regardless of their energy duration."
+        for s in 1:length(sys.storages.names)
+            if sys.storages.categories[s] == "VPP"
+                sys.storages.energy_capacity[s, :] .= round.(Int, sys.storages.energy_capacity[s, :] * derate_VPPs)
+            end
+        end
     end
 
     return sys
