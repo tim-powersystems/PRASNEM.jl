@@ -25,12 +25,12 @@ function applyGenHeatwaveDerating!(sys, resilience_folder::String)
    # ==========================================================================
    # WIND DERATING - min(original capacity, new derated capacity)
    # ==========================================================================
-   file_id = findfirst(occursin.(r"generator_cf_wind", lowercase.(resil_files)))
+   file_id = findfirst(occursin.(r"wind", lowercase.(resil_files)))
    if isnothing(file_id)
-      @warn("No wind derating file found with name containing 'generator_cf_wind'. Skipping wind derating.")
+      @warn("No wind derating file found with name containing 'wind'. Skipping wind derating.")
    else
 
-      file_wind_derating = joinpath(resilience_folder, resil_files[findfirst(occursin.(r"generator_cf_wind", lowercase.(resil_files)))])
+      file_wind_derating = joinpath(resilience_folder, resil_files[findfirst(occursin.(r"wind", lowercase.(resil_files)))])
       @info("Derating wind generators using file:\n$(file_wind_derating)")
       w_cf = PRASNEM.read_timeseries_file(file_wind_derating) # CF here is "correction factor"
       w_cf_unstacked = unstack(w_cf, :date, :id_gen, :value)
@@ -63,26 +63,22 @@ function applyGenHeatwaveDerating!(sys, resilience_folder::String)
    # ==========================================================================
    # LargePV DERATING - original capacity * derating factor
    # ==========================================================================
-   file_id = findfirst(occursin.(r"generator_cf_largepv_pvinv", lowercase.(resil_files)))
+   file_id = findfirst(occursin.(r"largepv", lowercase.(resil_files)))
    if isnothing(file_id)
-      @warn("No large PV derating files found with names containing 'generator_cf_largepv_pvinv'. Skipping large PV derating.")
+      @warn("No large PV derating files found with names containing 'largepv'. Skipping large PV derating.")
    else
-      # Inverters
-      file_largepv_inv_derating = joinpath(resilience_folder, resil_files[findfirst(occursin.(r"generator_cf_largepv_pvinv", lowercase.(resil_files)))])
       # Modules
-      file_largepv_mod_derating = joinpath(resilience_folder, resil_files[findfirst(occursin.(r"generator_cf_largepv_pvmod", lowercase.(resil_files)))])
+      file_largepv_mod_derating = joinpath(resilience_folder, resil_files[findfirst(occursin.(r"largepv", lowercase.(resil_files)))])
 
-      @info("Derating large PV generators using files:\nInverters: $(file_largepv_inv_derating)\nModules: $(file_largepv_mod_derating)")
+      @info("Derating large PV generators using file: $(file_largepv_mod_derating)")
 
-      lpv_inv_cf = PRASNEM.read_timeseries_file(file_largepv_inv_derating) # CF here is "correction factor"
       lpv_mod_cf = PRASNEM.read_timeseries_file(file_largepv_mod_derating) # CF here is "correction factor"
-      lpv_inv_cf_unstacked = unstack(lpv_inv_cf, :date, :id_gen, :value)
       lpv_mod_cf_unstacked = unstack(lpv_mod_cf, :date, :id_gen, :value)
-      lp_ids = unique(vcat(parse.(Int, names(select(lpv_inv_cf_unstacked, Not(:date)))), parse.(Int, names(select(lpv_mod_cf_unstacked, Not(:date))))))
+      lp_ids = unique(parse.(Int, names(select(lpv_mod_cf_unstacked, Not(:date)))))
 
-      diff = year(lpv_inv_cf_unstacked.date[1]) - year(sys.timestamps[1])
-      lpv_inv_cf_unstacked.date .= lpv_inv_cf_unstacked.date .- Year(diff) # Shift the dates to match the system timestamps, assuming module derating is the same
-      t = findfirst(lpv_inv_cf_unstacked.date[1] .== DateTime.(collect(sys.timestamps))):findfirst(lpv_inv_cf_unstacked.date[end] .== DateTime.(collect(sys.timestamps)))
+      diff = year(lpv_mod_cf_unstacked.date[1]) - year(sys.timestamps[1])
+      lpv_mod_cf_unstacked.date .= lpv_mod_cf_unstacked.date .- Year(diff) # Shift the dates to match the system timestamps, assuming module derating is the same
+      t = findfirst(lpv_mod_cf_unstacked.date[1] .== DateTime.(collect(sys.timestamps))):findfirst(lpv_mod_cf_unstacked.date[end] .== DateTime.(collect(sys.timestamps)))
 
       # LargePV derating
       for id in lp_ids
@@ -92,7 +88,7 @@ function applyGenHeatwaveDerating!(sys, resilience_folder::String)
             continue
          end
          # For each of those unit indices, update the pmax timeseries with the correction factor
-         correction_factor = reshape(min.(lpv_inv_cf_unstacked[!, "$(id)"], lpv_mod_cf_unstacked[!, "$(id)"]), 1, :)
+         correction_factor = reshape(lpv_mod_cf_unstacked[!, "$(id)"], 1, :)
          if any(correction_factor .< 1.0)
             n_timesteps = sum(correction_factor .< 1.0)
             @info("Derating large PV generator $(id) for $n_timesteps timesteps.")
@@ -106,27 +102,22 @@ function applyGenHeatwaveDerating!(sys, resilience_folder::String)
    # ==========================================================================
    # RoofPV DERATING - original capacity * derating factor
    # ==========================================================================
-   file_id = findfirst(occursin.(r"generator_cf_roofpv_pvinv", lowercase.(resil_files)))
+   file_id = findfirst(occursin.(r"roofpv", lowercase.(resil_files)))
    if isnothing(file_id)
-      @warn("No roof PV derating file found with name containing 'generator_cf_roofpv_pvinv'. Skipping roof PV derating.")
+      @warn("No roof PV derating file found with name containing 'roofpv'. Skipping roof PV derating.")
    else
-      # Inverters
-      file_roofpv_inv_derating = joinpath(resilience_folder, resil_files[findfirst(occursin.(r"generator_cf_roofpv_pvinv", lowercase.(resil_files)))])
       # Modules
-      file_roofpv_mod_derating = joinpath(resilience_folder, resil_files[findfirst(occursin.(r"generator_cf_roofpv_pvmod", lowercase.(resil_files)))])
+      file_roofpv_mod_derating = joinpath(resilience_folder, resil_files[findfirst(occursin.(r"roofpv", lowercase.(resil_files)))])
    
+      @info("Derating roof PV generators using file: $(file_roofpv_mod_derating)")
 
-      @info("Derating roof PV generators using files:\nInverters: $(file_roofpv_inv_derating)\nModules: $(file_roofpv_mod_derating)")
-
-      rpv_inv_cf = PRASNEM.read_timeseries_file(file_roofpv_inv_derating) # CF here is "correction factor"
       rpv_mod_cf = PRASNEM.read_timeseries_file(file_roofpv_mod_derating) # CF here is "correction factor"
-      rpv_inv_cf_unstacked = unstack(rpv_inv_cf, :date, :id_gen, :value)
       rpv_mod_cf_unstacked = unstack(rpv_mod_cf, :date, :id_gen, :value)
-      rp_ids = unique(vcat(parse.(Int, names(select(rpv_inv_cf_unstacked, Not(:date)))), parse.(Int, names(select(rpv_mod_cf_unstacked, Not(:date))))))
+      rp_ids = unique(parse.(Int, names(select(rpv_mod_cf_unstacked, Not(:date)))))
 
-      diff = year(rpv_inv_cf_unstacked.date[1]) - year(sys.timestamps[1])
-      rpv_inv_cf_unstacked.date .= rpv_inv_cf_unstacked.date .- Year(diff) # Shift the dates to match the system timestamps, assuming module derating is the same
-      t = findfirst(rpv_inv_cf_unstacked.date[1] .== DateTime.(collect(sys.timestamps))):findfirst(rpv_inv_cf_unstacked.date[end] .== DateTime.(collect(sys.timestamps)))
+      diff = year(rpv_mod_cf_unstacked.date[1]) - year(sys.timestamps[1])
+      rpv_mod_cf_unstacked.date .= rpv_mod_cf_unstacked.date .- Year(diff) # Shift the dates to match the system timestamps, assuming module derating is the same
+      t = findfirst(rpv_mod_cf_unstacked.date[1] .== DateTime.(collect(sys.timestamps))):findfirst(rpv_mod_cf_unstacked.date[end] .== DateTime.(collect(sys.timestamps)))
 
       for id in rp_ids
          # Find all the unit indices in the system that correspond to this generator id   
@@ -135,7 +126,7 @@ function applyGenHeatwaveDerating!(sys, resilience_folder::String)
             continue
          end
          # For each of those unit indices, update the pmax timeseries with the correction factor
-         correction_factor = reshape(min.(rpv_inv_cf_unstacked[!, "$(id)"], rpv_mod_cf_unstacked[!, "$(id)"]), 1, :)
+         correction_factor = reshape(rpv_mod_cf_unstacked[!, "$(id)"], 1, :)
          if any(correction_factor .< 1.0)
             n_timesteps = sum(correction_factor .< 1.0)
             @info("Derating roofPV generator $(id) for $n_timesteps timesteps.")
@@ -178,7 +169,6 @@ function applyGenHeatwaveDerating!(sys, resilience_folder::String)
          end
       end
    end
-
 
 
    return sys
