@@ -1,5 +1,6 @@
 function createStorages(storages_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
-    scenario=2, gentech_excluded=[], alias_excluded=[], investment_filter=[0], active_filter=[1], get_only_hydro=false)
+    scenario=2, gentech_excluded=[], alias_excluded=[], investment_filter=[0], active_filter=[1], get_only_hydro=false,
+    DER_parameters=get_DER_parameters(;case="base"))
 
 
     # ================================ Static data =========================================
@@ -170,6 +171,16 @@ function createStorages(storages_input_file, timeseries_folder, units, regions_s
                 end
             end
         end
+    end
+
+    # Now if VPPs are included, apply the availability factor to their capacities if defined in the scenario assumptions
+    if haskey(DER_parameters, "VPP_availability") && DER_parameters["VPP_flexibility"]
+        VPP_availability = DER_parameters["VPP_availability"]
+        vpp_idxs = findall(x -> x == "VPP", stors_categories)
+        @info("Applying VPP availability of $(VPP_availability * 100)% to all VPP storage capacities.")
+        stors_dischcap[vpp_idxs, :] .= round.(Int, stors_dischcap[vpp_idxs, :] .* VPP_availability)
+        stors_chargecap[vpp_idxs, :] .= round.(Int, stors_chargecap[vpp_idxs, :] .* VPP_availability)
+        stors_energycap[vpp_idxs, :] .= round.(Int, stors_energycap[vpp_idxs, :] .* VPP_availability)
     end
 
     # Calculate the gen_region_attribution

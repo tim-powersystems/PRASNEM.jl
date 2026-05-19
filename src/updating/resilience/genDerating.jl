@@ -89,10 +89,10 @@ function applyGenHeatwaveDerating!(sys, resilience_folder::String)
          end
          # For each of those unit indices, update the pmax timeseries with the correction factor
          correction_factor = reshape(lpv_mod_cf_unstacked[!, "$(id)"], 1, :)
-         if any(correction_factor .< 1.0)
-            n_timesteps = sum(correction_factor .< 1.0)
-            @info("Derating large PV generator $(id) for $n_timesteps timesteps.")
-            sys.generators.capacity[rel_gen_idxs, t] .= round.(Int, sys.generators.capacity[rel_gen_idxs, t] .* correction_factor)
+         n_timesteps = sum(correction_factor .< 1.0)
+         if n_timesteps > 0
+            @info("Changing large PV generator $(id) capacity for $n_timesteps timesteps (multiply with min(cf, 1.0)).")
+            sys.generators.capacity[rel_gen_idxs, t] .= round.(Int, sys.generators.capacity[rel_gen_idxs, t] .* min.(correction_factor, 1.0))
          end
       end
    end
@@ -127,10 +127,10 @@ function applyGenHeatwaveDerating!(sys, resilience_folder::String)
          end
          # For each of those unit indices, update the pmax timeseries with the correction factor
          correction_factor = reshape(rpv_mod_cf_unstacked[!, "$(id)"], 1, :)
-         if any(correction_factor .< 1.0)
-            n_timesteps = sum(correction_factor .< 1.0)
-            @info("Derating roofPV generator $(id) for $n_timesteps timesteps.")
-            sys.generators.capacity[rel_gen_idxs, t] .= round.(Int, sys.generators.capacity[rel_gen_idxs, t] .* correction_factor)
+         n_timesteps = sum(correction_factor .< 1.0)
+         if n_timesteps > 0
+            @info("Changing roofPV generator $(id) capacity for $n_timesteps timesteps (multiply with min(cf, 1.0)).")
+            sys.generators.capacity[rel_gen_idxs, t] .= round.(Int, sys.generators.capacity[rel_gen_idxs, t] .* min.(correction_factor, 1.0))
          end
       end
    end

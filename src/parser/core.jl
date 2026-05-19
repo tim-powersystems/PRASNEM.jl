@@ -153,17 +153,17 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
         push!(alias_excluded, "RoofPV")
     end
     if DER_parameters["DSP_flexibility"]
-        push!(der_considered, "DSP")
+        push!(der_considered, string.(round(Int, get(DER_parameters, "DSP_availability", 1.0) * 100)) * "% DSP")
     else
         push!(gentech_excluded, "DSP")
     end
     if DER_parameters["EV_charge_flexibility"]
-        push!(der_considered, "EV (charge flexibility)")
+        push!(der_considered, string.(round(Int, get(DER_parameters, "EV_availability", 1.0) * 100)) * "% EV (charge flexibility)")
     else
         push!(gentech_excluded, "EV")
     end
     if DER_parameters["VPP_flexibility"]
-        push!(der_considered, "VPP")
+        push!(der_considered, string.(round(Int, get(DER_parameters, "VPP_availability", 1.0) * 100)) * "% VPP")
     else
         push!(gentech_excluded, "VPP")
     end
@@ -189,7 +189,8 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     gens, gen_region_attribution = createGenerators(generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter)
     stors, stors_region_attribution = createStorages(storages_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
-        scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter)
+        scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter,
+        DER_parameters=DER_parameters)
     genstors, genstors_region_attribution = createGenStorages(storages_input_file, generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, 
         hydro_parameters=hydro_parameters, weather_folder=weather_folder)
