@@ -83,6 +83,22 @@ function createDemandResponses(der_input_file, demand_input_file, timeseries_fol
             end
         end
 
+        # Now check the availability (if defined as a parameter)
+        if haskey(DER_parameters, "DSP_availability") && DER_parameters["DSP_flexibility"]
+            DSP_availability = DER_parameters["DSP_availability"]
+            dsp_ids = string.(dr_info[findall(dr_info.tech[:] .== "DSP"), :].id_der)
+            @info("Applying DSP availability of $(DSP_availability * 100)% to all the DSP timeseries: $(join(dsp_ids, ", ")).")
+            dr_timeseries[!, dsp_ids] .= round.(Int, dr_timeseries[!, dsp_ids] .* DSP_availability)
+        end
+
+        if haskey(DER_parameters, "EV_availability") && DER_parameters["EV_charge_flexibility"]
+            EV_availability = DER_parameters["EV_availability"]
+            ev_ids = string.(dr_info[findall(dr_info.tech[:] .== "EV"), :].id_der)
+            @info("Applying EV availability of $(EV_availability * 100)% to all the EV timeseries: $(join(ev_ids, ", ")).")
+            dr_timeseries[!, ev_ids] .= round.(Int, dr_timeseries[!, ev_ids] .* EV_availability)
+        end
+
+
         # Now create the DemandResponses object
         number_of_drs = nrow(dr_info)
         dr_names = string.(dr_info.id_der)
