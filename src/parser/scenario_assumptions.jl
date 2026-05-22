@@ -101,6 +101,29 @@ function get_DER_parameters(; case="base")
                     ),
             "VPP_flexibility"=>false, # For PRASNEM and SchedNEM (if false, VPP storage units are disabled by setting their capacities to zero) 
             )
+    elseif case == "baseLowEV"
+        return Dict(
+            "RoofPV"=>true, # For PRASNEM (if false, RoofPV generation units are excluded)
+            "DSP_flexibility"=>false, # For PRASNEM and SchedNEM
+                "DSP_interest"=>-1.0,  # default value
+                "DSP_payback_before_borrowing"=>false, # Only relevant for SchedNEM
+                "DSP_limit_energy_per_window"=>Dict("enabled" => true,
+                    "max_energy_time_window" => 24, 
+                    "max_energy_per_window_per_capacity" => 3.0, 
+                    "limits_on_price_bands" => [0] # Price band 0 is for the reliability response, other prices are (300, 500, 1000, 7500)
+                    ),
+            "EV_charge_flexibility"=>true, # For PRASNEM and SchedNEM
+                "EV_availability"=> 0.25, # This is to define the availability of the EV flexibility (e.g. 1.0 means that the full EV capacity can be used for flexibility in each time step)
+                "EV_payback_window"=>10, 
+                "EV_interest"=>-1.0, # set to -1.0 to let EVs be disconnected (without payback)
+                "EV_max_energy_factor"=>100.0, # This is to define the capacity of the DSP in each time step (e.g. the "storage energy capacity" of the EV)
+                "EV_payback_before_borrowing"=>false, # Only relevant for SchedNEM
+                "EV_limit_energy_per_window"=>Dict("enabled" => false,
+                    "max_energy_time_window" => 24, 
+                    "max_energy_per_window_per_capacity" => 24.0
+                    ),
+            "VPP_flexibility"=>false, # For PRASNEM and SchedNEM (if false, VPP storage units are disabled by setting their capacities to zero) 
+            )
     elseif case == "baseEV"
         return Dict(
             "RoofPV"=>true, # For PRASNEM (if false, RoofPV generation units are excluded)
@@ -124,7 +147,7 @@ function get_DER_parameters(; case="base")
                     ),
             "VPP_flexibility"=>false, # For PRASNEM and SchedNEM (if false, VPP storage units are disabled by setting their capacities to zero) 
             )
-    elseif case == "baseHalfVPP"
+    elseif (case == "baseHalfVPP") || (case == "baseLowVPP")
         return Dict(
             "RoofPV"=>true, # For PRASNEM (if false, RoofPV generation units are excluded)
             "DSP_flexibility"=>false, # For PRASNEM and SchedNEM
@@ -192,6 +215,51 @@ function get_DER_parameters(; case="base")
                     ),
             "VPP_flexibility"=>true, # For PRASNEM and SchedNEM (if false, VPP storage units are disabled by setting their capacities to zero) 
             )
+    elseif (case == "baseDRnoVPP")
+        return Dict(
+            "RoofPV"=>true, # For PRASNEM (if false, RoofPV generation units are excluded)
+            "DSP_flexibility"=>true, # For PRASNEM and SchedNEM
+                "DSP_interest"=>-1.0,  # default value
+                "DSP_payback_before_borrowing"=>false, # Only relevant for SchedNEM
+                "DSP_limit_energy_per_window"=>Dict("enabled" => true,
+                    "max_energy_time_window" => 24, 
+                    "max_energy_per_window_per_capacity" => 3.0, 
+                    "limits_on_price_bands" => [0] # Price band 0 is for the reliability response, other prices are (300, 500, 1000, 7500)
+                    ),
+            "EV_charge_flexibility"=>false, # For PRASNEM and SchedNEM
+                "EV_payback_window"=>10, 
+                "EV_interest"=>0.0, # default value
+                "EV_max_energy_factor"=>100.0, # This is to define the capacity of the DSP in each time step (e.g. the "storage energy capacity" of the EV)
+                "EV_payback_before_borrowing"=>false, # Only relevant for SchedNEM
+                "EV_limit_energy_per_window"=>Dict("enabled" => false,
+                    "max_energy_time_window" => 24, 
+                    "max_energy_per_window_per_capacity" => 24.0
+                    ),
+            "VPP_flexibility"=>false, # For PRASNEM and SchedNEM (if false, VPP storage units are disabled by setting their capacities to zero) 
+            )
+    elseif (case == "baseLowDRnoVPP")
+        return Dict(
+            "RoofPV"=>true, # For PRASNEM (if false, RoofPV generation units are excluded)
+            "DSP_flexibility"=>true, # For PRASNEM and SchedNEM
+                "DSP_availability"=> 0.5, # This is to define the availability of the DSP flexibility (e.g. 0.5 means that only 50% of the DSP capacity can be used for flexibility in each time step)
+                "DSP_interest"=>-1.0,  # default value
+                "DSP_payback_before_borrowing"=>false, # Only relevant for SchedNEM
+                "DSP_limit_energy_per_window"=>Dict("enabled" => true,
+                    "max_energy_time_window" => 24, 
+                    "max_energy_per_window_per_capacity" => 3.0, 
+                    "limits_on_price_bands" => [0] # Price band 0 is for the reliability response, other prices are (300, 500, 1000, 7500)
+                    ),
+            "EV_charge_flexibility"=>false, # For PRASNEM and SchedNEM
+                "EV_payback_window"=>10, 
+                "EV_interest"=>0.0, # default value
+                "EV_max_energy_factor"=>100.0, # This is to define the capacity of the DSP in each time step (e.g. the "storage energy capacity" of the EV)
+                "EV_payback_before_borrowing"=>false, # Only relevant for SchedNEM
+                "EV_limit_energy_per_window"=>Dict("enabled" => false,
+                    "max_energy_time_window" => 24, 
+                    "max_energy_per_window_per_capacity" => 24.0
+                    ),
+            "VPP_flexibility"=>false, # For PRASNEM and SchedNEM (if false, VPP storage units are disabled by setting their capacities to zero) 
+            )
     elseif (case == "demand_response") || (case == "baseDR")
         return Dict(
             "RoofPV"=>true, # For PRASNEM (if false, RoofPV generation units are excluded)
@@ -215,7 +283,7 @@ function get_DER_parameters(; case="base")
             "VPP_flexibility"=>true, # For PRASNEM and SchedNEM (if false, VPP storage units are disabled by setting their capacities to zero) 
             )
 
-    elseif case == "coordination"
+    elseif (case == "coordination") || (case == "baseDER")
         @warn("The 'coordination' DER case is still under development and may not be fully defined yet. Please check the assumptions for this case before using it.")
         return Dict(
             "RoofPV"=>true, # For PRASNEM (if false, RoofPV generation units are excluded)
@@ -229,8 +297,9 @@ function get_DER_parameters(; case="base")
                     "limits_on_price_bands" => [0] # Price band 0 is for the reliability response, other prices are (300, 500, 1000, 7500)
                     ),
             "EV_charge_flexibility"=>true, # For PRASNEM and SchedNEM
+                "EV_availability"=> 0.5, # This is to define the availability of the EV flexibility (e.g. 1.0 means that the full EV capacity can be used for flexibility in each time step)
                 "EV_payback_window"=>10, 
-                "EV_interest"=>0.0, 
+                "EV_interest"=>-1.0, # set to -1.0 to let EVs be disconnected (without payback)
                 "EV_max_energy_factor"=>100.0, # This is to define the capacity of the DSP in each time step (e.g. the "storage energy capacity" of the EV)
                 "EV_payback_before_borrowing"=>false, # Only relevant for SchedNEM
                 "EV_limit_energy_per_window"=>Dict("enabled" => false,
