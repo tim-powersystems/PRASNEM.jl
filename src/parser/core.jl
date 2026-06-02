@@ -17,7 +17,6 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     investment_filter::Union{Vector{Any}, Vector{Int}}=[0], # only include assets that are not selected for investment
     active_filter::Union{Vector{Any}, Vector{Int}}=[1], # only include active assets
     line_alias_included::Union{Vector{Any}, Vector{String}}=[], # can include specific lines to be included even if they would be filtered out due to investment/active status
-    weather_folder::String="", # Can specify a specific folder with the timeseries weather data that should be used (no capacities are read from here, just normalised timeseries)
     DER_parameters=get_DER_parameters(), # Additional parameters for DER (e.g. whether to include EV flexibility or not)
     hydro_parameters=get_hydro_parameters() # Default parameters for hydro generators and genstorages (can be updated based on scenario assumptions)
     )
@@ -33,8 +32,7 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     - investment_filter (default=[0]): Array indicating which assets to include based on investment status.
     - active_filter (default=[1]): Array indicating which assets to include based on their active status.
     - line_alias_included (default=[]): Array of line aliases to include even if they would be filtered out due to investment/active status.
-    - weather_folder (default=""): Folder with weather data timeseries to use (no capacities are read from here, just normalised timeseries for demand, VRE and DSP).
-    
+
     Some further notes:
     - If a different weather folder is specified: 
         - Demand timeseries are read from there instead of the main timeseries folder (normalised to match max demand target year).
@@ -44,7 +42,7 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     
     """
     # Run function to check if parameters are valid
-    check_parameters(regions_selected, weather_folder, start_dt, end_dt)
+    check_parameters(regions_selected, "", start_dt, end_dt)
     
     # TimeZones only works until 2038 (see: https://juliatime.github.io/TimeZones.jl/stable/faq/) - therefore use UTC for dates beyond that
     if end_dt > Date(2038)
@@ -66,10 +64,6 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     #          This is a "cost" that pushes storages, generatorstorages, demandresponses to also charge/discharge from gens further away (i.e. up to 12 hops)
     #          This is only enabled/enforced for the custom PRASCore version, that is available at https://github.com/ARPST-UniMelb/PRAS.jl
     additional_offset_DispatchProblem = 12 
-
-    if weather_folder == timeseries_folder
-        weather_folder = "" # Skip updating weather folder if it's the same as the main timeseries folder
-    end
 
     # ---- SETUP INPUT AND OUTPUT FILES ----
 
@@ -125,10 +119,6 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
         output_name *= "_incl_line_" * join(line_ids, "_")
     end
 
-    if !isempty(weather_folder)
-        output_name *= "_w-" * splitext(basename(weather_folder))[1]
-    end
-
     output_filename = string(output_name, ".pras")
 
     if timeseries_folder[end-3:end] != string(Dates.year(start_dt))
@@ -180,12 +170,7 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
     info_string *= "Input folder: $(timeseries_folder)\n"
     @info(info_string)
 
-    if !(weather_folder == "")
-        @info("Using different weather year from folder: ", weather_folder)
-        @warn "Different weather folder is experimental. It is recommended to create the system based on data from different weather trace obtained via PISP."
-    end
-
-    regions = createRegions(demand_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; scenario=scenario, weather_folder=weather_folder)
+    regions = createRegions(demand_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; scenario=scenario)
     gens, gen_region_attribution = createGenerators(generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter)
     stors, stors_region_attribution = createStorages(storages_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
@@ -193,9 +178,9 @@ function create_pras_system(start_dt::DateTime, end_dt::DateTime, input_folder::
         DER_parameters=DER_parameters)
     genstors, genstors_region_attribution = createGenStorages(storages_input_file, generators_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
         scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, 
-        hydro_parameters=hydro_parameters, weather_folder=weather_folder)
+        hydro_parameters=hydro_parameters)
     demandresponses, dr_region_attribution = createDemandResponses(demandresponses_input_file, demand_input_file, timeseries_folder, units, regions_selected, start_dt, end_dt; 
-        scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, weather_folder=weather_folder, DER_parameters=DER_parameters)
+        scenario=scenario, gentech_excluded=gentech_excluded, alias_excluded=alias_excluded, investment_filter=investment_filter, active_filter=active_filter, DER_parameters=DER_parameters)
 
     if length(regions_selected) <= 1
         # If copperplate model is desired

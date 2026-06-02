@@ -4,7 +4,7 @@
 
 The goal of this package is to provide a model of the Australian National Electricity Market (NEM) to use in the Probabilistic Resource Adequacy Suite (PRAS) for to perform resource adequacy / reliability studies. 
 
-PRAS is developed and maintained by NREL and can be found here: https://github.com/NREL/PRAS
+PRAS is developed and maintained by NLR and can be found here: https://github.com/NatLabRockies/PRAS
 
 This repository contains:
 - All the parser scripts to create a PRAS model from ISP data
@@ -78,7 +78,8 @@ There are multiple optional parameters that can be adjusted when creating the pr
 | investment_filer    | [0]           | Array indicating which assets to include based on investment status (if investment candidate or not)                               |
 | active_filter       | [1]           | Array indicating which assets to include based on their active status                                                              |
 | line_alias_included | []            | Array of line aliases to include even if they would be filtered out due to investment/active status                                |
-| weather_folder      | ""            | Folder with weather data timeseries to use (no capacities are read from here, only normalised timeseries for demand, VRE, and DSP). Inflows are considered in full (not normalised).|
+| DER_parameters      | `PRASNEM.get_DER_parameters()` | Dict with DER scenario, as defined in `PRASNEM.get_DER_parameters()` function.                                    |
+| hydro_parameters    | `PRASNEM.get_hydro_parameters()` | Dict with hydro parameters (e.g. initial SOC of reservoirs, reservoir sizes, efficiencies).                     |
 
 ## Tips for more efficient usage
 
@@ -100,7 +101,7 @@ The core function of PRASNEM.jl is ```create_pras_system()```, as outlined above
 
 
 ## Further PRAS functions
-For reference, these are a number of possible outputs from PRAS (full list can be found in the PRAS documentation [here](https://nrel.github.io/PRAS/stable/PRAS/results/)):
+For reference, these are a number of possible outputs from PRAS (full list can be found in the PRAS documentation [here](https://natlabrockies.github.io/PRAS/stable/PRAS/results/)):
 ```Julia
 using PRAS
 
