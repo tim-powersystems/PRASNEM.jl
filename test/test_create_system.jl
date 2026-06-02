@@ -4,7 +4,7 @@ using PRAS
 using Dates
 
 @testset "Create System Tests" begin
-    data_dir = "/src/sample_data/nem12"
+    data_dir = "../src/sample_data/nem12"
     generator_input_file = joinpath(@__DIR__, data_dir, "Generator.csv")
     storages_input_file = joinpath(@__DIR__, data_dir, "ESS.csv")
     timeseries_folder = joinpath(@__DIR__, data_dir, "schedule-24h")
