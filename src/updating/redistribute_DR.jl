@@ -1,8 +1,10 @@
-function redistribute_DR(sys; mode::String="default", region_area_mapping::Dict{Int64,Int64}=get_region_area_map())
+function redistribute_DR!(sys; mode::String="default", region_area_mapping::Dict{Int64,Int64}=get_region_area_map())
 
     vaild_modes = ["default", "equal", "max demand", "total energy"]
     if !(mode in vaild_modes)
         error("Unsupported demand response redistribution mode: $mode. Supported modes are: $(join(vaild_modes, ", "))")
+    else
+        @info("Redistributing demand response (DSP) using mode: $mode")
     end
 
     for area in unique(values(region_area_mapping))
@@ -65,4 +67,8 @@ function redistribute_DR(sys; mode::String="default", region_area_mapping::Dict{
     end
 
     return sys
+end
+
+function redistribute_DR(sys; mode::String="default", region_area_mapping::Dict{Int64,Int64}=get_region_area_map())
+    return redistribute_DR!(sys; mode=mode, region_area_mapping=region_area_mapping)
 end
